@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BCH-98 PRO v5.3 — modular — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
+<title>BCH-98 PRO v5.4 — modular — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
   <div class="title-bar">
-    <div>🏛️ BCH-98 PRO v5.3 — modular — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
+    <div>🏛️ BCH-98 PRO v5.4 — modular — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
     <div class="title-controls">
       <button onclick="setTheme('light')">Claro</button><button onclick="setTheme('dark')">Oscuro</button><button onclick="setTheme('retro')">Retro</button>
     </div>
@@ -75,7 +75,7 @@
   </div>
 
   <!-- CUERPO PRINCIPAL -->
-  <div class="main-grid"><nav class="bank-side" aria-label="Módulos bancarios"><strong>Dirección y banca</strong><button onclick="chooseDivision('ALL')">Presidencia / cartera total</button><button onclick="chooseDivision('PERSONAS')">Banca de Personas</button><button onclick="chooseDivision('PRIVADA')">Banca Privada</button><button onclick="chooseDivision('PYME')">Banca PyME</button><button onclick="chooseDivision('EMPRESARIAL')">Banca Corporativa</button><button onclick="selectModule('t-captacion')">Captación y remesas</button><strong>Tesorería y control</strong><button onclick="selectModule('t-fx')">Divisas e interbancario</button><button onclick="selectModule('t-balance')">Contabilidad y garantías</button><button onclick="selectModule('t-graficos')">Indicadores históricos</button></nav>
+  <div class="main-grid"><nav class="bank-side" aria-label="Módulos bancarios"><strong>Dirección y banca</strong><button onclick="chooseDivision('ALL')">Presidencia / cartera total</button><button onclick="chooseDivision('PERSONAS')">Banca de Personas</button><button onclick="chooseDivision('PRIVADA')">Banca Privada</button><button onclick="chooseDivision('PYME')">Banca PyME</button><button onclick="chooseDivision('EMPRESARIAL')">Banca Corporativa</button><button onclick="selectModule('t-captacion')">Captación y remesas</button><strong>Tesorería y control</strong><button onclick="selectModule('t-fx')">Divisas e interbancario</button><button onclick="selectModule('t-balance')">Contabilidad y garantías</button><button onclick="selectModule('t-graficos')">Indicadores históricos</button><button onclick="selectModule('t-final')">Regulación y RRHH</button><button onclick="selectModule('t-system')">Partidas y pruebas</button></nav>
     <!-- PANEL IZQUIERDO -->
     <div>
       <div class="win-group">
@@ -110,7 +110,7 @@
           <strong class="mono" id="lbl-branches">3 Agencias</strong>
         </div>
         <div style="display:flex; gap:4px;">
-          <button class="op-btn" onclick="openBranch()" style="flex:1;">+ Abrir Agencia (L 12M)</button>
+          <button class="op-btn" onclick="openBranch()" style="flex:1;">+ Abrir Agencia (L 4.5M)</button>
           <button class="op-btn" onclick="closeBranch()" style="flex:1;">- Cerrar</button>
         </div>
       </div>
@@ -146,7 +146,7 @@
         <div class="tab-btn" onclick="openTab('t-captacion', this)">🏦 Captación, Remesas &amp; CDP</div>
         <div class="tab-btn" onclick="openTab('t-fx', this)">💱 Divisas &amp; Mercado Interbancario</div>
         <div class="tab-btn" onclick="openTab('t-balance', this)">⚖️ Balance, Adjudicados &amp; Contabilidad</div>
-        <div class="tab-btn" onclick="openTab('t-graficos', this)">📊 Gráficos Retro</div>
+        <div class="tab-btn" onclick="openTab('t-final', this)">Regulación / RRHH</div><div class="tab-btn" onclick="openTab('t-system', this)">Sistema</div><div class="tab-btn" onclick="openTab('t-graficos', this)">📊 Gráficos Retro</div>
       </div>
 
       <!-- TAB 1: CRÉDITO, TARJETAS Y EQUIFAX -->
@@ -346,6 +346,7 @@
         </div>
       </div>
 
+<div class="tab-content win-outset" id="t-final"><div class="win-group"><strong>Supervisión simulada CNBS / BCH / FOSEDE</strong><div id="reg-summary"></div><button class="op-btn" onclick="inspectBank()">Inspección</button> <button id="rescue-btn" onclick="rescueBank()">Regularizar (aporte único condicionado)</button></div><div class="win-group"><strong>Agencias y talento humano</strong><div id="hr-list"></div><p><select id="hr-city"><option>San Pedro Sula</option><option>Choloma</option><option>Tegucigalpa</option><option>Puerto Cortés</option><option>La Ceiba</option><option>El Progreso</option><option>Comayagua</option><option>Villanueva</option><option>Santa Rosa de Copán</option><option>Choluteca</option></select> <button class="op-btn" onclick="openManagedBranch(document.getElementById('hr-city').value)">Abrir agencia L 4.5M</button></p><p><select id="hr-agency"></select> <select id="hr-role"><option>Cajero</option><option>Asesor</option><option>Analista</option><option>Gestor de cobros</option><option>Gerente</option><option>Auditor</option></select> <input type="number" id="hr-count" min="1" max="10" value="1"> <button class="op-btn" onclick="hireFromUI()">Contratar</button></p></div><div class="win-group" id="executive-metrics"></div></div><div class="tab-content win-outset" id="t-system"><div class="win-group"><h3>Partidas y respaldo</h3><p>Espacio 1 <button onclick="saveSlot(1)">Guardar</button> <button onclick="loadSlot(1)">Cargar</button></p><p>Espacio 2 <button onclick="saveSlot(2)">Guardar</button> <button onclick="loadSlot(2)">Cargar</button></p><p>Espacio 3 <button onclick="saveSlot(3)">Guardar</button> <button onclick="loadSlot(3)">Cargar</button></p><button onclick="exportGame()">Exportar JSON</button> <label>Importar JSON <input type="file" accept=".json" onchange="importGame(this)"></label><p>Los archivos se guardan localmente en este navegador.</p></div><div class="win-group"><h3>Suite de 20 pruebas</h3><button onclick="showFullTests()">Ejecutar pruebas (incluye diez años simulados)</button><div id="test-results"></div></div></div>
       <!-- TAB 5: GRÁFICOS RETRO -->
       <div class="tab-content win-outset" id="t-graficos">
         <div class="control-row" style="margin-bottom:4px;">
@@ -385,6 +386,10 @@
 <script src="js/treasury.js"></script>
 <script src="js/market.js"></script>
 <script src="js/competitors.js"></script>
+<script src="js/regulation.js"></script>
+<script src="js/hr.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
 <script src="js/core.js"></script>
 </body>
 </html>
