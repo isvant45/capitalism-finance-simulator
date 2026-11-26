@@ -3,35 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BANKMASTER 98 PRO - Simulador de Banca & Tesorería v2.4</title>
+<title>BCH-98 PRO — Simulador Bancario Integral (Banca HN & Corporativa)</title>
 <style>
   :root {
+    --bg-desktop: #008080;
     --win-bg: #c0c0c0;
+    --win-surface: #d8d8d8;
+    --win-inset-bg: #ffffff;
     --win-dark: #808080;
     --win-darker: #404040;
     --win-light: #ffffff;
     --win-blue: #000080;
     --win-blue-grad: #1084d0;
-    --crt-green: #00ff66;
-    --crt-bg: #08140c;
+    --text-main: #000000;
+    --text-muted: #3b3b3b;
+    --border-row: #cccccc;
+    --pos: #006600;
+    --neg: #aa0000;
+    --warn: #9c4d00;
+    --crt-bg: #07130b;
+    --crt-fg: #00ff66;
+    --crt-grid: #13361f;
+  }
+
+  body.dark-mode {
+    --bg-desktop: #0b1017;
+    --win-bg: #1b222c;
+    --win-surface: #232c38;
+    --win-inset-bg: #11161d;
+    --win-dark: #0d1117;
+    --win-darker: #06080b;
+    --win-light: #354152;
+    --win-blue: #0e3a6e;
+    --win-blue-grad: #1c5fa8;
+    --text-main: #e6edf3;
+    --text-muted: #9aa7b6;
+    --border-row: #2d3748;
+    --pos: #3fb950;
+    --neg: #f85149;
+    --warn: #e3b341;
+    --crt-bg: #050a0f;
+    --crt-fg: #39d353;
+    --crt-grid: #102436;
   }
 
   * {
     box-sizing: border-box;
-    font-family: "MS Sans Serif", "Tahoma", "Courier New", monospace;
-    font-size: 12px;
-    user-select: none;
+    font-family: "Trebuchet MS", "Tahoma", "MS Sans Serif", sans-serif;
+    font-size: 12.5px;
   }
 
   body {
     margin: 0;
     padding: 6px;
-    background-color: #008080; /* Clásico fondo Teal Win95/98 */
-    color: #000;
-    overflow-x: hidden;
+    background-color: var(--bg-desktop);
+    color: var(--text-main);
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  /* Efecto biselado Windows 95/98 */
+  .mono {
+    font-family: "Lucida Console", "Courier New", monospace;
+  }
+
+  /* Biselado retro 1995-1999 */
   .win-outset {
     background: var(--win-bg);
     border-top: 2px solid var(--win-light);
@@ -42,20 +76,21 @@
   }
 
   .win-inset {
-    background: #fff;
+    background: var(--win-inset-bg);
+    color: var(--text-main);
     border-top: 2px solid var(--win-dark);
     border-left: 2px solid var(--win-dark);
     border-right: 2px solid var(--win-light);
     border-bottom: 2px solid var(--win-light);
-    box-shadow: inset 1px 1px 0 #000;
   }
 
   .win-group {
     border: 1px solid var(--win-dark);
     box-shadow: 1px 1px 0 var(--win-light);
-    padding: 10px 8px 8px 8px;
+    padding: 11px 8px 8px 8px;
     margin-bottom: 8px;
     position: relative;
+    background: var(--win-bg);
   }
 
   .win-group-title {
@@ -63,199 +98,83 @@
     top: -8px;
     left: 8px;
     background: var(--win-bg);
-    padding: 0 4px;
+    padding: 0 5px;
     font-weight: bold;
-    color: #000080;
+    color: var(--text-main);
+    font-size: 11.5px;
   }
 
-  /* Barra de título principal */
   .title-bar {
     background: linear-gradient(90deg, var(--win-blue), var(--win-blue-grad));
-    color: #fff;
-    padding: 3px 6px;
+    color: #ffffff;
+    padding: 4px 8px;
     font-weight: bold;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    letter-spacing: 0.5px;
+    gap: 8px;
   }
 
-  .title-controls span {
-    display: inline-block;
-    width: 16px;
-    height: 14px;
-    background: var(--win-bg);
-    color: #000;
-    text-align: center;
-    line-height: 12px;
-    font-weight: bold;
-    border-top: 1px solid #fff;
-    border-left: 1px solid #fff;
-    border-right: 1px solid #000;
-    border-bottom: 1px solid #000;
-    margin-left: 2px;
-    font-size: 10px;
-  }
-
-  /* Menú superior */
-  .menu-bar {
+  .title-controls {
     display: flex;
-    gap: 12px;
-    padding: 3px 8px;
-    border-bottom: 1px solid var(--win-dark);
-    background: var(--win-bg);
+    gap: 3px;
+    align-items: center;
   }
 
-  .menu-bar span u { text-decoration: underline; }
+  .title-controls button {
+    padding: 1px 6px;
+    font-size: 11px;
+  }
 
-  /* Botones retro */
+  .sub-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: var(--win-surface);
+    border-bottom: 1px solid var(--win-dark);
+    font-size: 11.5px;
+  }
+
   button {
     background: var(--win-bg);
+    color: var(--text-main);
     border-top: 2px solid var(--win-light);
     border-left: 2px solid var(--win-light);
-    border-right: 2px solid #000;
-    border-bottom: 2px solid #000;
-    box-shadow: inset -1px -1px 0 var(--win-dark);
-    padding: 4px 10px;
+    border-right: 2px solid var(--win-darker);
+    border-bottom: 2px solid var(--win-darker);
+    padding: 4px 9px;
     cursor: pointer;
     font-weight: bold;
-    color: #000;
+  }
+
+  button:hover:not(:disabled) {
+    filter: brightness(1.06);
   }
 
   button:active:not(:disabled) {
-    border-top: 2px solid #000;
-    border-left: 2px solid #000;
+    border-top: 2px solid var(--win-darker);
+    border-left: 2px solid var(--win-darker);
     border-right: 2px solid var(--win-light);
     border-bottom: 2px solid var(--win-light);
-    box-shadow: none;
-    padding: 5px 9px 3px 11px;
+    padding: 5px 8px 3px 10px;
   }
 
   button:disabled {
-    color: var(--win-dark);
-    text-shadow: 1px 1px 0 #fff;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 
-  .btn-primary {
-    background: #d4d0c8;
-    border: 2px solid #000;
-    outline: 1px solid #fff;
-  }
-
-  /* Pestañas estilo Win98 */
-  .tabs {
-    display: flex;
-    padding: 4px 4px 0 4px;
-    gap: 2px;
-  }
-
-  .tab-btn {
-    padding: 5px 12px;
-    background: var(--win-bg);
-    border-top: 2px solid var(--win-light);
-    border-left: 2px solid var(--win-light);
-    border-right: 2px solid #000;
-    border-bottom: none;
-    border-radius: 3px 3px 0 0;
-    cursor: pointer;
-    position: relative;
-    top: 2px;
-  }
-
-  .tab-btn.active {
-    font-weight: bold;
-    padding-bottom: 7px;
-    top: 0;
-    z-index: 2;
-    background: var(--win-bg);
-  }
-
-  .tab-content {
-    display: none;
-    padding: 10px;
-    border-top: 2px solid var(--win-light);
-    position: relative;
-    z-index: 1;
-  }
-
-  .tab-content.active {
-    display: block;
-  }
-
-  /* Grid principal */
-  .main-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 8px;
-    margin-top: 6px;
-  }
-
-  @media (max-width: 900px) {
-    .main-grid { grid-template-columns: 1fr; }
-  }
-
-  /* Tablas financieras */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: "Courier New", monospace;
-  }
-
-  th {
-    background: var(--win-bg);
-    border-top: 1px solid #fff;
-    border-left: 1px solid #fff;
-    border-right: 1px solid #000;
-    border-bottom: 1px solid #000;
-    padding: 3px 5px;
-    text-align: left;
-    font-size: 11px;
-  }
-
-  td {
-    padding: 3px 5px;
-    border-bottom: 1px dotted #ccc;
-    font-family: "Courier New", monospace;
-    font-size: 12px;
-  }
-
-  .num { text-align: right; font-weight: bold; }
-  .pos { color: #006600; }
-  .neg { color: #aa0000; }
-  .warn { color: #b35900; }
-
-  /* Pantalla CRT Ticker */
-  .crt-box {
-    background: var(--crt-bg);
-    color: var(--crt-green);
-    font-family: "Courier New", monospace;
-    padding: 6px;
-    border: 2px inset #404040;
-    height: 115px;
-    overflow-y: auto;
-    font-size: 11px;
-    line-height: 1.35;
-  }
-
-  .crt-box div { margin-bottom: 2px; }
-
-  /* Controles deslizantes */
-  .control-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-  }
-
-  input[type="range"] {
-    width: 120px;
-    accent-color: #000080;
+  .btn-go {
+    background: var(--win-blue);
+    color: #fff;
   }
 
   .kpi-strip {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 6px;
     padding: 6px;
     background: var(--win-bg);
@@ -263,270 +182,469 @@
   }
 
   .kpi-card {
-    padding: 4px 6px;
-    background: #e6e6e6;
-    border: 1px inset #fff;
+    padding: 5px 7px;
+    background: var(--win-surface);
+    border-top: 1px solid var(--win-light);
+    border-left: 1px solid var(--win-light);
+    border-right: 1px solid var(--win-darker);
+    border-bottom: 1px solid var(--win-darker);
   }
 
-  .kpi-label { font-size: 10px; color: #333; text-transform: uppercase; }
-  .kpi-val { font-size: 14px; font-weight: bold; font-family: "Courier New", monospace; margin-top: 2px; }
+  .kpi-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .kpi-val {
+    font-size: 13.5px;
+    font-weight: bold;
+    margin-top: 2px;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 335px 1fr;
+    gap: 8px;
+    padding: 6px;
+  }
+
+  @media (max-width: 960px) {
+    .main-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 2px 4px 0 4px;
+  }
+
+  .tab-btn {
+    padding: 5px 10px;
+    background: var(--win-surface);
+    border-top: 2px solid var(--win-light);
+    border-left: 2px solid var(--win-light);
+    border-right: 2px solid var(--win-darker);
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    cursor: pointer;
+    font-size: 11.5px;
+  }
+
+  .tab-btn.active {
+    background: var(--win-bg);
+    font-weight: bold;
+    border-bottom: 2px solid var(--win-bg);
+    position: relative;
+    top: 1px;
+  }
+
+  .tab-content {
+    display: none;
+    padding: 10px;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    background: var(--win-surface);
+    color: var(--text-main);
+    border-top: 1px solid var(--win-light);
+    border-left: 1px solid var(--win-light);
+    border-right: 1px solid var(--win-darker);
+    border-bottom: 1px solid var(--win-darker);
+    padding: 4px 6px;
+    text-align: left;
+    font-size: 11px;
+    position: sticky;
+    top: 0;
+  }
+
+  td {
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border-row);
+    font-size: 11.5px;
+  }
+
+  .num { text-align: right; font-weight: bold; }
+  .pos { color: var(--pos); }
+  .neg { color: var(--neg); }
+  .warn { color: var(--warn); }
+
+  .crt-box {
+    background: var(--crt-bg);
+    color: var(--crt-fg);
+    padding: 7px;
+    border: 2px inset var(--win-dark);
+    height: 120px;
+    overflow-y: auto;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .control-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  input[type="range"], select {
+    accent-color: var(--win-blue);
+  }
+
+  select {
+    background: var(--win-inset-bg);
+    color: var(--text-main);
+    border: 1px solid var(--win-dark);
+    padding: 2px 4px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 760px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .badge-seg {
+    display: inline-block;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: bold;
+    border: 1px solid var(--win-dark);
+    background: var(--win-surface);
+  }
 
   .status-bar {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    padding: 3px 6px;
-    margin-top: 6px;
-    border-top: 1px solid var(--win-dark);
+    gap: 6px;
+    padding: 4px 6px;
+    background: var(--win-bg);
+    border-top: 2px solid var(--win-dark);
     font-size: 11px;
   }
 
   .status-panel {
-    border: 1px inset #fff;
-    padding: 2px 6px;
-    background: var(--win-bg);
-  }
-
-  /* Modal Retro */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 999;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .modal-window {
-    width: 440px;
-    max-width: 95vw;
+    background: var(--win-surface);
+    border: 1px inset var(--win-light);
+    padding: 2px 7px;
   }
 </style>
 </head>
 <body>
 
-<div class="win-outset" id="app-window">
+<div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
   <div class="title-bar">
-    <div>🏦 BANKMASTER 98 PRO — Terminal de Gestión Bancaria & Riesgo Crediticio [BANCO CENTRAL AUTORIZADO]</div>
+    <div>🏛️ BCH-98 PRO — Banca Comercial, Privada, PyME, Corporativa &amp; Mesa de Divisas (HN)</div>
     <div class="title-controls">
-      <span>_</span><span>□</span><span>×</span>
+      <button onclick="toggleTheme()" id="btn-theme">🌙 Modo Oscuro</button>
     </div>
   </div>
 
-  <!-- MENÚ SUPERIOR -->
-  <div class="menu-bar">
-    <span><u>A</u>rchivo</span>
-    <span><u>O</u>peraciones</span>
-    <span><u>T</u>esorería</span>
-    <span><u>R</u>egulación Basilea</span>
-    <span style="margin-left:auto; font-weight:bold; color:#000080;" id="clock-display">TRIMESTRE 1 - AÑO 1998</span>
+  <!-- SUB-BARRA DE ENTORNO -->
+  <div class="sub-bar">
+    <div>
+      <strong>Segmento Foco:</strong>
+      <select id="sel-focus" onchange="changeFocus()">
+        <option value="ALL">Banca Universal (Todos los Niveles)</option>
+        <option value="MASIVA">Banca Persona Masiva</option>
+        <option value="PRIVADA">Banca Privada (CD / CDP)</option>
+        <option value="PYME">Banca PyME</option>
+        <option value="CORP">Banca Corporativa e Internacional</option>
+      </select>
+    </div>
+    <div class="mono" style="font-weight:bold;" id="clock-lbl">TRIMESTRE 1 — AÑO 1999</div>
+    <div class="mono" id="fx-lbl">USD/HNL: L 24.75</div>
   </div>
 
-  <!-- CINTA DE KPIS MACRO Y BANCARIOS -->
+  <!-- KPIs PRINCIPALES -->
   <div class="kpi-strip">
     <div class="kpi-card">
-      <div class="kpi-label">Patrimonio Neto (Capital)</div>
-      <div class="kpi-val pos" id="kpi-equity">$10,000,000</div>
+      <div class="kpi-label">Patrimonio Neto</div>
+      <div class="kpi-val mono pos" id="kpi-equity">L 150,000,000</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Caja & Encaje B. Central</div>
-      <div class="kpi-val" id="kpi-cash">$10,000,000</div>
+      <div class="kpi-label">Caja &amp; Encaje (HNL)</div>
+      <div class="kpi-val mono" id="kpi-cash-hnl">L 180,000,000</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Encaje Legal (Mín. 15%)</div>
-      <div class="kpi-val pos" id="kpi-reserve-ratio">100.0%</div>
+      <div class="kpi-label">Posición Divisas (USD)</div>
+      <div class="kpi-val mono" id="kpi-usd">$1,200,000</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Solvencia Basilea (Mín. 10%)</div>
-      <div class="kpi-val pos" id="kpi-car">100.0%</div>
+      <div class="kpi-label">Encaje Legal (Mín 15%)</div>
+      <div class="kpi-val mono pos" id="kpi-encaje">100.0%</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Tasa Ref. Banco Central</div>
-      <div class="kpi-val" id="kpi-cb-rate">5.50%</div>
+      <div class="kpi-label">Solvencia Basilea (Mín 10%)</div>
+      <div class="kpi-val mono pos" id="kpi-car">100.0%</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Inflación / PIB Anual</div>
-      <div class="kpi-val" id="kpi-macro">3.2% / +2.8%</div>
+      <div class="kpi-label">Tasa Política Monetaria</div>
+      <div class="kpi-val mono" id="kpi-tpm">6.00%</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Reputación / Rating</div>
-      <div class="kpi-val" id="kpi-rating">BBB (75/100)</div>
+      <div class="kpi-label">Calificación / Reputación</div>
+      <div class="kpi-val mono" id="kpi-rating">AA+ (80/100)</div>
     </div>
   </div>
 
-  <!-- BARRA DE ACCIÓN DE TURNO -->
-  <div style="padding: 6px 8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; border-bottom: 1px solid #808080;">
-    <button class="btn-primary" onclick="nextTurn()" id="btn-next-turn">⏩ AVANZAR TRIMESTRE (Cierre Contable)</button>
-    <button onclick="autoApproveGoodLoans()">⚡ Aprobar Créditos AAA/AA</button>
-    <button onclick="openModal('modal-emergency')">🚨 Ventanilla Banco Central</button>
-    <button onclick="resetGame()" style="margin-left:auto;">🔄 Reiniciar Banco</button>
+  <!-- ACCIONES GLOBALES -->
+  <div style="padding: 6px 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; border-bottom: 1px solid var(--win-dark);">
+    <button class="btn-go" onclick="nextQuarter()">⏩ CERRAR TRIMESTRE (Simular)</button>
+    <button onclick="approveLowRisk()">⚡ Aprobar Riesgo Bajo (&lt; 6%)</button>
+    <button onclick="requestRediscount()">🏛️ Redescuento B. Central (+L 20M)</button>
+    <button onclick="repayRediscount()">💳 Pagar Redescuento (-L 20M)</button>
+    <button onclick="resetSim()" style="margin-left:auto;">🔄 Reiniciar</button>
   </div>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <div class="main-grid" style="padding: 0 6px;">
-    
-    <!-- COLUMNA IZQUIERDA: CONTROLES DEL BANCO Y CONSOLA -->
+  <!-- CUERPO PRINCIPAL -->
+  <div class="main-grid">
+    <!-- PANEL IZQUIERDO -->
     <div>
-      <!-- POLÍTICA DE TASAS Y OPERACIÓN -->
       <div class="win-group">
-        <div class="win-group-title">Política de Tasas & Operación</div>
-        
-        <div class="control-row">
-          <label>Tasa Activa (Préstamos):</label>
-          <span id="lbl-loan-rate" style="font-weight:bold; color:#000080;">9.50%</span>
-        </div>
-        <input type="range" id="inp-loan-rate" min="3.0" max="24.0" step="0.25" value="9.5" style="width:100%; margin-bottom:8px;" oninput="updateRatesUI()">
+        <div class="win-group-title">Política de Tasas &amp; Captación</div>
 
         <div class="control-row">
-          <label>Tasa Pasiva (Ahorros):</label>
-          <span id="lbl-dep-rate" style="font-weight:bold; color:#006600;">4.00%</span>
+          <span>Tasa Activa Base (Créditos):</span>
+          <strong class="mono pos" id="lbl-act-rate">13.50%</strong>
         </div>
-        <input type="range" id="inp-dep-rate" min="0.5" max="16.0" step="0.25" value="4.0" style="width:100%; margin-bottom:8px;" oninput="updateRatesUI()">
+        <input type="range" id="rng-act-rate" min="6" max="32" step="0.5" value="13.5" style="width:100%; margin-bottom:8px;" oninput="syncControls()">
 
         <div class="control-row">
-          <label>Spread Bancario Bruto:</label>
-          <span id="lbl-spread" style="font-weight:bold;">+5.50%</span>
+          <span>Tasa Ahorro / Cheque:</span>
+          <strong class="mono" id="lbl-sav-rate">3.50%</strong>
         </div>
-
-        <hr style="border:0; border-top:1px solid #808080; margin:8px 0;">
-
-        <div class="control-row">
-          <label>Rigor Análisis Riesgo:</label>
-          <span id="lbl-risk-strict" style="font-weight:bold;">Medio (50%)</span>
-        </div>
-        <input type="range" id="inp-risk-strict" min="10" max="95" step="5" value="50" style="width:100%; margin-bottom:8px;" oninput="updateRatesUI()">
+        <input type="range" id="rng-sav-rate" min="0.5" max="12" step="0.25" value="3.5" style="width:100%; margin-bottom:8px;" oninput="syncControls()">
 
         <div class="control-row">
-          <label>Sucursales Activas:</label>
-          <span id="lbl-branches" style="font-weight:bold;">2 ($120k/trim)</span>
+          <span>Tasa CD / CDP (Plazo Fijo):</span>
+          <strong class="mono warn" id="lbl-cd-rate">7.50%</strong>
         </div>
-        <div style="display:flex; gap:4px; margin-top:4px;">
-          <button onclick="buildBranch()" style="flex:1;">+ Abrir Sucursal ($1.5M)</button>
+        <input type="range" id="rng-cd-rate" min="2" max="16" step="0.25" value="7.5" style="width:100%; margin-bottom:8px;" oninput="syncControls()">
+
+        <div class="control-row">
+          <span>Filtro Riesgo Crédito:</span>
+          <strong class="mono" id="lbl-risk-cap">Máx 25% Mora</strong>
+        </div>
+        <input type="range" id="rng-risk-cap" min="5" max="45" step="5" value="25" style="width:100%; margin-bottom:8px;" oninput="syncControls()">
+
+        <div class="control-row">
+          <span>Agencias / Sucursales:</span>
+          <strong class="mono" id="lbl-branches">3 Agencias</strong>
+        </div>
+        <div style="display:flex; gap:4px;">
+          <button onclick="openBranch()" style="flex:1;">+ Abrir Agencia (L 12M)</button>
           <button onclick="closeBranch()" style="flex:1;">- Cerrar</button>
         </div>
       </div>
 
-      <!-- MONITOR DE EVENTOS CRT -->
       <div class="win-group">
-        <div class="win-group-title">Teletipo Reuters / B. Central</div>
-        <div class="crt-box" id="event-log">
-          <div>> INICIALIZANDO SISTEMA BANCARIO CORE v2.4...</div>
-          <div>> CAPITAL INICIAL VERIFICADO: $10,000,000.</div>
-          <div>> REQUISITO ENCAJE LEGAL: 15.0% SOBRE DEPÓSITOS.</div>
-          <div>> LISTO PARA OPERAR.</div>
-        </div>
+        <div class="win-group-title">Teletipo Financiero (Tegucigalpa / SPS / NY)</div>
+        <div class="crt-box mono" id="ticker-log"></div>
       </div>
 
-      <!-- RESUMEN ESTADO DE RESULTADOS ÚLTIMO TRIMESTRE -->
       <div class="win-group">
-        <div class="win-group-title">Estado de Resultados (Últ. Trim.)</div>
-        <div class="win-inset" style="padding:4px;">
+        <div class="win-group-title">Estado de Resultados (Últ. Trimestre)</div>
+        <div class="win-inset" style="padding:5px;">
           <table>
-            <tr><td>(+) Intereses Cobrados</td><td class="num pos" id="inc-interest">$0</td></tr>
-            <tr><td>(+) Rendimiento Bonos</td><td class="num pos" id="inc-bonds">$0</td></tr>
-            <tr><td>(+) Comisiones Bancarias</td><td class="num pos" id="inc-fees">$0</td></tr>
-            <tr><td>(-) Intereses Pagados</td><td class="num neg" id="exp-interest">$0</td></tr>
-            <tr><td>(-) Gastos Operativos</td><td class="num neg" id="exp-opex">$0</td></tr>
-            <tr><td>(-) Provisiones Mora</td><td class="num neg" id="exp-provisions">$0</td></tr>
-            <tr style="border-top:2px solid #000; font-weight:bold;">
+            <tr><td>(+) Intereses Cartera &amp; Tarjetas</td><td class="num mono pos" id="pl-inc-loans">L 0</td></tr>
+            <tr><td>(+) Comisiones, FX &amp; Cartas Créd.</td><td class="num mono pos" id="pl-inc-fees">L 0</td></tr>
+            <tr><td>(-) Intereses Ahorro, Cheques &amp; CDP</td><td class="num mono neg" id="pl-exp-dep">L 0</td></tr>
+            <tr><td>(-) Gastos Agencias &amp; Operación</td><td class="num mono neg" id="pl-exp-opex">L 0</td></tr>
+            <tr><td>(-) Provisiones &amp; Castigos Mora</td><td class="num mono neg" id="pl-exp-prov">L 0</td></tr>
+            <tr style="border-top:2px solid var(--win-dark); font-weight:bold;">
               <td>UTILIDAD NETA TRIM.</td>
-              <td class="num" id="net-income">$0</td>
+              <td class="num mono" id="pl-net">L 0</td>
             </tr>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- COLUMNA DERECHA: PESTAÑAS DE GESTIÓN PROFUNDA -->
+    <!-- PANEL DERECHO: PESTAÑAS -->
     <div>
       <div class="tabs">
-        <div class="tab-btn active" onclick="switchTab('tab-loans', this)">📋 Mesa de Crédito (<span id="badge-loans">0</span>)</div>
-        <div class="tab-btn" onclick="switchTab('tab-balance', this)">⚖️ Balance Contable</div>
-        <div class="tab-btn" onclick="switchTab('tab-treasury', this)">📈 Tesorería & Bonos</div>
-        <div class="tab-btn" onclick="switchTab('tab-charts', this)">📊 Gráficos Históricos</div>
+        <div class="tab-btn active" onclick="openTab('t-credito', this)">💳 Crédito y Análisis (<span id="cnt-apps">0</span>)</div>
+        <div class="tab-btn" onclick="openTab('t-captacion', this)">🏦 Captación (Ahorro, Cheques, CDP)</div>
+        <div class="tab-btn" onclick="openTab('t-fx', this)">💱 Subasta Divisas &amp; Banca Int.</div>
+        <div class="tab-btn" onclick="openTab('t-balance', this)">⚖️ Balance &amp; Activos Eventuales</div>
+        <div class="tab-btn" onclick="openTab('t-graficos', this)">📊 Gráficos Retro</div>
       </div>
 
-      <!-- TAB 1: MESA DE CRÉDITO -->
-      <div class="tab-content win-outset active" id="tab-loans">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <strong>Solicitudes de Préstamos en Evaluación (Trimestre Actual)</strong>
-          <button onclick="generateLoanApplications()">🔄 Actualizar Solicitudes</button>
+      <!-- TAB 1: CRÉDITO Y ANÁLISIS -->
+      <div class="tab-content win-outset active" id="t-credito">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
+          <strong>Solicitudes en Comité de Crédito (Personal, Vehicular, Hipoteca, Tarjeta, PyME, Corporativo)</strong>
+          <button onclick="refreshApps()">🔄 Nuevas Solicitudes</button>
         </div>
-        <div class="win-inset" style="max-height: 220px; overflow-y: auto; margin-bottom: 10px;">
+        <div class="win-inset" style="max-height: 230px; overflow:auto; margin-bottom:10px;">
           <table>
             <thead>
               <tr>
-                <th>Solicitante / Sector</th>
-                <th>Rating</th>
+                <th>Cliente / Empresa</th>
+                <th>Banca</th>
+                <th>Producto</th>
                 <th class="num">Monto</th>
                 <th class="num">Plazo</th>
                 <th class="num">Tasa</th>
-                <th class="num">Riesgo Default</th>
-                <th>Decisión</th>
+                <th class="num">Prob. Mora</th>
+                <th>Análisis / Acción</th>
               </tr>
             </thead>
-            <tbody id="loan-apps-body"></tbody>
+            <tbody id="tbody-apps"></tbody>
           </table>
         </div>
 
-        <strong>Cartera de Créditos Activa & Morosidad (NPL)</strong>
-        <div class="win-inset" style="max-height: 195px; overflow-y: auto; margin-top:4px;">
+        <strong>Cartera Crediticia Activa (Seguimiento de Pagos y Mora)</strong>
+        <div class="win-inset" style="max-height: 215px; overflow:auto; margin-top:4px;">
           <table>
             <thead>
               <tr>
                 <th>Cliente</th>
-                <th>Rating</th>
-                <th class="num">Saldo Vivo</th>
+                <th>Producto</th>
+                <th class="num">Saldo (HNL)</th>
                 <th class="num">Tasa</th>
-                <th class="num">Cuotas Rest.</th>
+                <th class="num">Trim. Rest.</th>
                 <th>Estado</th>
-                <th>Acción</th>
+                <th>Gestión</th>
               </tr>
             </thead>
-            <tbody id="active-loans-body"></tbody>
+            <tbody id="tbody-loans"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- TAB 2: BALANCE GENERAL -->
-      <div class="tab-content win-outset" id="tab-balance">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      <!-- TAB 2: CAPTACIÓN (AHORRO, CHEQUES, CD / CDP) -->
+      <div class="tab-content win-outset" id="t-captacion">
+        <div class="grid-2">
+          <div class="win-group">
+            <div class="win-group-title">Captación de Fondos (Pasivos)</div>
+            <p style="margin-top:0; color:var(--text-muted);">
+              Atrae depósitos de clientes y Banca Privada. Los <b>CD / CDP</b> dan liquidez estable a plazo, pero pagan mayor interés.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <button onclick="attractDeposits('SAVINGS', 15000000)">+ Campaña Cuenta de Ahorro (L 15M)</button>
+              <button onclick="attractDeposits('CHECKING', 20000000)">+ Captar Cuentas de Cheques Empresariales (L 20M)</button>
+              <button onclick="attractDeposits('CDP', 25000000)">+ Emitir CDP Banca Privada a 4 Trimestres (L 25M)</button>
+              <button onclick="attractDeposits('CDP', 50000000)">+ Emitir CDP Corporativo a 8 Trimestres (L 50M)</button>
+            </div>
+          </div>
+
+          <div class="win-group">
+            <div class="win-group-title">Detalle de Depósitos y CDPs Vigentes</div>
+            <div class="win-inset" style="padding:6px;">
+              <table>
+                <tr><td>Cuentas de Ahorro (Masiva)</td><td class="num mono" id="dep-sav">L 0</td></tr>
+                <tr><td>Cuentas de Cheques (Operativa)</td><td class="num mono" id="dep-chk">L 0</td></tr>
+                <tr><td>Certificados CD / CDP Activos</td><td class="num mono" id="dep-cdp">L 0</td></tr>
+                <tr style="border-top:2px solid var(--win-dark); font-weight:bold;">
+                  <td>TOTAL CAPTACIÓN</td>
+                  <td class="num mono" id="dep-tot">L 0</td>
+                </tr>
+              </table>
+            </div>
+            <div style="margin-top:8px;">
+              <strong>CD / CDP Emitidos:</strong>
+              <div class="win-inset" style="max-height:130px; overflow:auto; margin-top:4px;">
+                <table>
+                  <thead>
+                    <tr><th>Instrumento</th><th class="num">Monto</th><th class="num">Tasa</th><th class="num">Vence</th></tr>
+                  </thead>
+                  <tbody id="tbody-cdps"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: SUBASTA DE DIVISAS Y BANCA INTERNACIONAL -->
+      <div class="tab-content win-outset" id="t-fx">
+        <div class="grid-2">
+          <div class="win-group">
+            <div class="win-group-title">Mesa de Subasta de Divisas (USD / HNL)</div>
+            <p style="margin-top:0; color:var(--text-muted);">
+              Participa en la subasta de divisas y operaciones con corresponsales internacionales. Cobras comisión cambiaria del 1.2%.
+            </p>
+            <div class="win-inset" style="padding:6px; margin-bottom:8px;">
+              <div>Tipo de Cambio Referencial: <strong class="mono" id="fx-spot">L 24.75 / $1</strong></div>
+              <div>Spread Compra/Venta Mesa: <strong class="mono pos">+L 0.18 / $1</strong></div>
+              <div>Posición Actual en Dólares: <strong class="mono" id="fx-pos">$1,200,000</strong></div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+              <button onclick="tradeFX('BUY', 250000)">Comprar $250,000 (Usa L)</button>
+              <button onclick="tradeFX('SELL', 250000)">Vender $250,000 (Ingresa L)</button>
+              <button onclick="tradeFX('BUY', 1000000)">Subasta Compra $1,000,000</button>
+              <button onclick="tradeFX('SELL', 1000000)">Subasta Venta $1,000,000</button>
+            </div>
+          </div>
+
+          <div class="win-group">
+            <div class="win-group-title">Banca Corporativa e Internacional</div>
+            <p style="margin-top:0; color:var(--text-muted);">
+              Emite Cartas de Crédito para importadores/exportadores y gestiona líneas de corresponsalía internacional.
+            </p>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <button onclick="issueLetterOfCredit()">📄 Emitir Carta de Crédito Importación (Comisión L 1.2M)</button>
+              <button onclick="payDividend()">💰 Repartir Dividendo a Accionistas (L 15M)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: BALANCE GENERAL Y ACTIVOS EVENTUALES -->
+      <div class="tab-content win-outset" id="t-balance">
+        <div class="grid-2">
           <div>
-            <strong>ACTIVOS (Lo que posee el banco)</strong>
+            <strong>ACTIVOS (Total: <span class="mono" id="bs-tot-assets">L 0</span>)</strong>
             <div class="win-inset" style="padding:6px; margin-top:4px;">
               <table>
-                <tr><td>Caja y Reservas B. Central</td><td class="num" id="bs-cash">$10,000,000</td></tr>
-                <tr><td>Bonos Soberanos (Car. Inv.)</td><td class="num" id="bs-bonds">$0</td></tr>
-                <tr><td>Cartera Créditos Vigentes</td><td class="num" id="bs-loans-good">$0</td></tr>
-                <tr><td>Cartera Vencida (Mora)</td><td class="num neg" id="bs-loans-bad">$0</td></tr>
-                <tr><td>(-) Provisión Incobrables</td><td class="num neg" id="bs-provisions">$0</td></tr>
-                <tr><td>Inmuebles y Sucursales</td><td class="num" id="bs-fixed">$3,000,000</td></tr>
-                <tr style="border-top:2px solid #000; font-weight:bold;">
-                  <td>TOTAL ACTIVOS</td>
-                  <td class="num" id="bs-total-assets">$13,000,000</td>
-                </tr>
+                <tr><td>Caja &amp; Encaje (HNL)</td><td class="num mono" id="bs-cash-hnl">L 0</td></tr>
+                <tr><td>Disponibilidades en USD (Valuado HNL)</td><td class="num mono" id="bs-cash-usd">L 0</td></tr>
+                <tr><td>Cartera de Préstamos Vigentes</td><td class="num mono pos" id="bs-loans-ok">L 0</td></tr>
+                <tr><td>Cartera en Mora (Vencida)</td><td class="num mono neg" id="bs-loans-bad">L 0</td></tr>
+                <tr><td><b>Activos Eventuales</b> (Bienes Adjudicados)</td><td class="num mono warn" id="bs-eventual">L 0</td></tr>
+                <tr><td>(-) Reserva / Provisión Incobrables</td><td class="num mono neg" id="bs-prov">L 0</td></tr>
+                <tr><td>Agencias y Activos Fijos</td><td class="num mono" id="bs-fixed">L 0</td></tr>
               </table>
             </div>
           </div>
 
           <div>
-            <strong>PASIVOS Y PATRIMONIO</strong>
+            <strong>PASIVOS Y PATRIMONIO (Total: <span class="mono" id="bs-tot-lp">L 0</span>)</strong>
             <div class="win-inset" style="padding:6px; margin-top:4px;">
               <table>
-                <tr><td>Depósitos a la Vista (Ahorro)</td><td class="num" id="bs-dep-demand">$0</td></tr>
-                <tr><td>Depósitos a Plazo Fijo (CDs)</td><td class="num" id="bs-dep-time">$0</td></tr>
-                <tr><td>Préstamos Banco Central</td><td class="num neg" id="bs-cb-debt">$0</td></tr>
-                <tr style="border-top:1px solid #000; font-weight:bold;">
+                <tr><td>Depósitos Ahorro + Cheques</td><td class="num mono" id="bs-dep-liq">L 0</td></tr>
+                <tr><td>Certificados de Depósito (CD / CDP)</td><td class="num mono" id="bs-dep-cdp">L 0</td></tr>
+                <tr><td>Redescuento Banco Central</td><td class="num mono neg" id="bs-rediscount">L 0</td></tr>
+                <tr style="border-top:1px solid var(--win-dark); font-weight:bold;">
                   <td>TOTAL PASIVOS</td>
-                  <td class="num" id="bs-total-liab">$0</td>
+                  <td class="num mono" id="bs-tot-liab">L 0</td>
                 </tr>
-                <tr><td colspan="2"> </td></tr>
-                <tr><td>Capital Social Suscrito</td><td class="num">$10,000,000</td></tr>
-                <tr><td>Resultados Acumulados</td><td class="num" id="bs-retained">$3,000,000</td></tr>
-                <tr style="border-top:2px solid #000; font-weight:bold;">
-                  <td>TOTAL PASIVO + PATRIMONIO</td>
-                  <td class="num" id="bs-total-eq-liab">$13,000,000</td>
+                <tr><td>Capital Pagado</td><td class="num mono" id="bs-cap">L 0</td></tr>
+                <tr><td>Utilidades Retenidas / Acumuladas</td><td class="num mono" id="bs-ret">L 0</td></tr>
+                <tr style="border-top:2px solid var(--win-dark); font-weight:bold;">
+                  <td>PATRIMONIO NETO</td>
+                  <td class="num mono" id="bs-eq">L 0</td>
                 </tr>
               </table>
             </div>
@@ -534,836 +652,800 @@
         </div>
 
         <div class="win-group" style="margin-top:10px;">
-          <div class="win-group-title">Indicadores Prudenciales (Normativa Basilea)</div>
-          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; text-align:center;">
-            <div class="win-inset" style="padding:6px;">
-              <div>Índice de Morosidad (NPL)</div>
-              <div style="font-size:15px; font-weight:bold;" id="ind-npl">0.00%</div>
-              <small>Alerta regulatoria > 6.0%</small>
-            </div>
-            <div class="win-inset" style="padding:6px;">
-              <div>Margen Neto Interés (NIM)</div>
-              <div style="font-size:15px; font-weight:bold;" id="ind-nim">0.00%</div>
-              <small>Óptimo bancario: 3.5% - 6.5%</small>
-            </div>
-            <div class="win-inset" style="padding:6px;">
-              <div>ROE (Rentabilidad Capital)</div>
-              <div style="font-size:15px; font-weight:bold;" id="ind-roe">0.00%</div>
-              <small>Retorno anualizado s/ Patrimonio</small>
-            </div>
+          <div class="win-group-title">Inventario de Activos Eventuales (Propiedades y Vehículos Adjudicados)</div>
+          <div class="win-inset" style="max-height:150px; overflow:auto;">
+            <table>
+              <thead>
+                <tr><th>Activo Adjudicado</th><th>Origen</th><th class="num">Valor Libros</th><th>Venta</th></tr>
+              </thead>
+              <tbody id="tbody-eventual"></tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <!-- TAB 3: TESORERÍA Y MERCADO -->
-      <div class="tab-content win-outset" id="tab-treasury">
-        <div class="win-group">
-          <div class="win-group-title">Mercado Secundario de Bonos Soberanos (Renta Fija)</div>
-          <p style="margin:2px 0 8px 0;">Los bonos ponderan 0% riesgo para Basilea y pagan cupón trimestral, pero su precio de mercado cae si el Banco Central sube las tasas.</p>
-          <div style="display:flex; justify-content:space-between; align-items:center; background:#e0e0e0; padding:6px; border:1px inset #fff; margin-bottom:8px;">
-            <div>
-              <strong>Bono Tesoro 10A (Cupón 6.0% anual)</strong><br>
-              <span>Precio Mercado: <b id="bond-price">$100.00</b> | Rendimiento Efectivo (TIR): <b id="bond-yield">6.00%</b></span>
-            </div>
-            <div>
-              <span>En Cartera: <b id="bond-holdings">$0</b></span>
-            </div>
-          </div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <button onclick="tradeBonds(1000000)">Comprar $1M en Bonos</button>
-            <button onclick="tradeBonds(5000000)">Comprar $5M en Bonos</button>
-            <button onclick="tradeBonds(-1000000)">Vender $1M en Bonos</button>
-            <button onclick="tradeBonds(-5000000)">Vender $5M en Bonos</button>
-          </div>
-        </div>
-
-        <div class="win-group">
-          <div class="win-group-title">Captación Institucional & Emisión de Certificados (CDs)</div>
-          <p style="margin:2px 0 8px 0;">Emite Certificados de Depósito a plazo fijo de 4 trimestres para conseguir liquidez inmediata. Pagan tasa pasiva + 1.5%.</p>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <button onclick="issueCD(2000000)">Emitir CDs por $2,000,000</button>
-            <button onclick="issueCD(5000000)">Emitir CDs por $5,000,000</button>
-            <button onclick="payDividends()">💸 Repartir Dividendo ($1M a Accionistas)</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 4: GRÁFICOS HISTÓRICOS RETRO -->
-      <div class="tab-content win-outset" id="tab-charts">
-        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-          <strong>Evolución Histórica de Patrimonio, Depósitos y Cartera (En Millones $)</strong>
-          <span style="font-size:11px;">
-            <span style="color:#00ff66; background:#000; padding:1px 4px;">■ Patrimonio</span>
-            <span style="color:#00ccff; background:#000; padding:1px 4px;">■ Cartera Préstamos</span>
-            <span style="color:#ffcc00; background:#000; padding:1px 4px;">■ Depósitos</span>
+      <!-- TAB 5: GRÁFICOS RETRO -->
+      <div class="tab-content win-outset" id="t-graficos">
+        <div class="control-row" style="margin-bottom:4px;">
+          <strong>Evolución Histórica (Millones de Lempiras — L)</strong>
+          <span class="mono" style="font-size:11px;">
+            <span class="pos">■ Patrimonio</span> ·
+            <span style="color:#0088cc;">■ Cartera</span> ·
+            <span class="warn">■ Captación</span>
           </span>
         </div>
-        <canvas id="retroChart" width="620" height="240" style="width:100%; height:240px; background:#08140c; border:2px inset #404040;"></canvas>
+        <canvas id="cv-main" width="760" height="220" style="width:100%; height:220px; display:block; border:2px inset var(--win-dark);"></canvas>
 
-        <div style="display:flex; justify-content:space-between; margin:8px 0 4px 0;">
-          <strong>Historial de Tasas: Activa vs. Pasiva vs. Banco Central (%)</strong>
-          <span style="font-size:11px;">
-            <span style="color:#ff5555; background:#000; padding:1px 4px;">■ Tasa Activa</span>
-            <span style="color:#55ff55; background:#000; padding:1px 4px;">■ Tasa Pasiva</span>
-            <span style="color:#ffffff; background:#000; padding:1px 4px;">■ Tasa Ref. BC</span>
+        <div class="control-row" style="margin:10px 0 4px 0;">
+          <strong>Historial de Tasas (%) &amp; Tipo de Cambio (L/USD)</strong>
+          <span class="mono" style="font-size:11px;">
+            <span class="neg">■ Tasa Activa</span> ·
+            <span class="pos">■ Tasa CDP</span> ·
+            <span>■ TPM</span>
           </span>
         </div>
-        <canvas id="ratesChart" width="620" height="145" style="width:100%; height:145px; background:#08140c; border:2px inset #404040;"></canvas>
+        <canvas id="cv-rates" width="760" height="150" style="width:100%; height:150px; display:block; border:2px inset var(--win-dark);"></canvas>
       </div>
     </div>
   </div>
 
   <!-- BARRA DE ESTADO INFERIOR -->
   <div class="status-bar">
-    <div class="status-panel" id="status-msg">Estado: Operando dentro de parámetros regulatorios.</div>
-    <div class="status-panel" id="status-clients">Clientes Activos: 1,250 | Empleados: 36</div>
-  </div>
-</div>
-
-<!-- MODAL VENTANILLA BANCO CENTRAL -->
-<div class="modal-overlay" id="modal-emergency">
-  <div class="win-outset modal-window">
-    <div class="title-bar">
-      <span>🏛️ Ventanilla de Liquidez — Banco Central</span>
-      <span style="cursor:pointer; background:#c0c0c0; color:#000; padding:0 4px;" onclick="closeModal('modal-emergency')">×</span>
-    </div>
-    <div style="padding:12px;">
-      <p>Si tu encaje legal cae por debajo del 15%, puedes solicitar un redescuento de emergencia al Banco Central a una tasa penalizada (Tasa Ref + 3.0%).</p>
-      <p><strong>Deuda actual con Banco Central:</strong> <span id="modal-cb-debt">$0</span></p>
-      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
-        <button onclick="borrowCentralBank(2000000)">Pedir $2,000,000</button>
-        <button onclick="borrowCentralBank(5000000)">Pedir $5,000,000</button>
-        <button onclick="repayCentralBank(2000000)">Amortizar $2,000,000</button>
-        <button onclick="closeModal('modal-emergency')" style="margin-left:auto;">Cerrar</button>
-      </div>
-    </div>
+    <div class="status-panel mono" id="st-msg">SISTEMA ACTIVO — Supervisión Prudencial Normal</div>
+    <div class="status-panel mono" id="st-meta">Clientes: 4,800 | Empleados: 75</div>
   </div>
 </div>
 
 <script>
-  // ESTADO GLOBAL DEL BANCO
-  let state = {
-    quarter: 1,
-    year: 1998,
-    cash: 10000000,
-    fixedAssets: 3000000,
-    branches: 2,
-    demandDeposits: 4000000,
-    timeDeposits: 2000000,
-    cbDebt: 0,
-    bondsFaceValue: 0,
-    bondPrice: 100.0,
-    paidInCapital: 10000000,
-    retainedEarnings: 3000000,
+const PRODUCTS = [
+  { code: "AHORRO/PERS", seg: "MASIVA", label: "Préstamo Personal", minAmt: 150000, maxAmt: 1200000, minQ: 4, maxQ: 12, rateAdj: 3.5, baseDef: 0.08, collateral: "Aval / Nómina" },
+  { code: "VEHICULAR", seg: "MASIVA", label: "Préstamo Vehicular", minAmt: 600000, maxAmt: 3500000, minQ: 8, maxQ: 20, rateAdj: 1.5, baseDef: 0.06, collateral: "Vehículo (Prenda)" },
+  { code: "TARJETA", seg: "MASIVA", label: "Línea Tarjeta Crédito", minAmt: 100000, maxAmt: 800000, minQ: 4, maxQ: 8, rateAdj: 11.0, baseDef: 0.14, collateral: "Quirografario" },
+  { code: "PRIVADA_CRED", seg: "PRIVADA", label: "Crédito Respaldo CDP", minAmt: 3000000, maxAmt: 18000000, minQ: 4, maxQ: 12, rateAdj: -1.0, baseDef: 0.02, collateral: "Depósito Pignorado" },
+  { code: "HIPOTECA", seg: "PRIVADA", label: "Crédito Hipotecario", minAmt: 2500000, maxAmt: 15000000, minQ: 12, maxQ: 28, rateAdj: -0.5, baseDef: 0.045, collateral: "Bien Inmueble" },
+  { code: "PYME_CAP", seg: "PYME", label: "Capital de Trabajo PyME", minAmt: 1000000, maxAmt: 8000000, minQ: 4, maxQ: 12, rateAdj: 1.0, baseDef: 0.09, collateral: "Inventarios / CxC" },
+  { code: "CORP_EST", seg: "CORP", label: "Financiamiento Corporativo", minAmt: 10000000, maxAmt: 60000000, minQ: 8, maxQ: 24, rateAdj: -1.5, baseDef: 0.035, collateral: "Flujo / Garantía Real" }
+];
+
+const NAMES = [
+  "Comercial Sula S.A.", "Inversiones Valle", "Agropecuaria Olancho", "Importadora Cortés",
+  "Ingeniería Tegucigalpa", "Transportes Caribe", "Grupo Hotelero Copán", "Carlos Mendoza",
+  "María Elena Castellanos", "Distribuidora Atlántida", "Constructora del Sur", "TecnoRed Honduras"
+];
+
+let db;
+
+function initialState() {
+  return {
+    q: 1,
+    yr: 1999,
+    focus: "ALL",
+    fxRate: 24.75,
+    tpm: 6.0,
+    actRate: 13.5,
+    savRate: 3.5,
+    cdRate: 7.5,
+    riskCap: 25,
+    branches: 3,
+    paidCap: 120000000,
+    retained: 30000000,
+    cashHnl: 180000000,
+    usdBalance: 1200000,
+    fixedAssets: 36000000,
+    savingsDep: 95000000,
+    checkingDep: 65000000,
+    cdps: [
+      { id: 1, name: "CDP Banca Privada #101", amount: 40000000, rate: 7.5, qLeft: 4 }
+    ],
+    rediscount: 0,
     provisions: 0,
-    loanRate: 9.5,
-    depositRate: 4.0,
-    riskStrictness: 50,
-    cbRate: 5.5,
-    inflation: 3.2,
-    gdpGrowth: 2.8,
-    reputation: 75,
-    clients: 1250,
-    loanApps: [],
-    activeLoans: [],
-    lastQuarter: {
-      incInterest: 0,
-      incBonds: 0,
+    reputation: 80,
+    clients: 4800,
+    apps: [],
+    loans: [],
+    eventualAssets: [],
+    pl: {
+      incLoans: 0,
       incFees: 0,
-      expInterest: 0,
+      expDep: 0,
       expOpex: 0,
-      expProvisions: 0,
-      netIncome: 0
+      expProv: 0,
+      net: 0
     },
-    history: {
-      labels: ['T1-98'],
-      equity: [13.0],
+    hist: {
+      labels: ["T1-99"],
+      eq: [150.0],
       loans: [0.0],
-      deposits: [6.0],
-      loanRate: [9.5],
-      depRate: [4.0],
-      cbRate: [5.5]
+      dep: [200.0],
+      act: [13.5],
+      cdp: [7.5],
+      tpm: [6.0]
     },
-    gameOver: false
+    locked: false
   };
+}
 
-  // Ajustar caja inicial para cuadrar balance: Activos (10M cash + 3M fixed = 13M) + 6M depósitos = 19M Activos / 6M Pasivos + 13M Patrimonio
-  state.cash = 16000000;
+function fmtL(n) {
+  const s = n < 0 ? "-" : "";
+  return s + "L " + Math.abs(Math.round(n)).toLocaleString("en-US");
+}
 
-  const SECTORS = [
-    { name: "Agroindustria del Norte", min: 400000, max: 1800000 },
-    { name: "Textiles & Maquila S.A.", min: 600000, max: 2500000 },
-    { name: "Inmobiliaria Horizonte", min: 1000000, max: 3500000 },
-    { name: "Transportes & Logística", min: 300000, max: 1200000 },
-    { name: "Supermercados La Unión", min: 500000, max: 2000000 },
-    { name: "Sistemas & Telecom 2000", min: 250000, max: 1100000 },
-    { name: "Constructora Metrópoli", min: 1200000, max: 4000000 },
-    { name: "Crédito Hipotecario Lote", min: 150000, max: 650000 }
-  ];
+function fmtU(n) {
+  const s = n < 0 ? "-" : "";
+  return s + "$" + Math.abs(Math.round(n)).toLocaleString("en-US");
+}
 
-  const RATINGS = [
-    { code: "AAA", probDefault: 0.008, spreadAdj: -1.0 },
-    { code: "AA",  probDefault: 0.018, spreadAdj: -0.5 },
-    { code: "A",   probDefault: 0.035, spreadAdj: 0.0 },
-    { code: "BBB", probDefault: 0.065, spreadAdj: 1.0 },
-    { code: "BB",  probDefault: 0.120, spreadAdj: 2.5 },
-    { code: "B",   probDefault: 0.210, spreadAdj: 4.5 },
-    { code: "CCC", probDefault: 0.350, spreadAdj: 7.0 }
-  ];
+function logEvent(text, cls = "") {
+  const box = document.getElementById("ticker-log");
+  const d = document.createElement("div");
+  if (cls) d.className = cls;
+  d.textContent = `[T${db.q}-${db.yr}] ${text}`;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
 
-  function fmt(num) {
-    const sign = num < 0 ? "-" : "";
-    return sign + "$" + Math.abs(Math.round(num)).toLocaleString("en-US");
-  }
+function toggleTheme() {
+  document.body.classList.toggle("dark-mode");
+  const isDark = document.body.classList.contains("dark-mode");
+  document.getElementById("btn-theme").textContent = isDark ? "☀️ Modo Claro" : "🌙 Modo Oscuro";
+  if (document.getElementById("t-graficos").classList.contains("active")) drawGraphs();
+}
 
-  function logMsg(msg, type = "") {
-    const box = document.getElementById("event-log");
-    const line = document.createElement("div");
-    let color = "#00ff66";
-    if (type === "warn") color = "#ffcc00";
-    if (type === "err") color = "#ff5555";
-    if (type === "info") color = "#55ffff";
-    line.style.color = color;
-    line.textContent = `[T${state.quarter}-${state.year}] ${msg}`;
-    box.appendChild(line);
-    box.scrollTop = box.scrollHeight;
-  }
+function openTab(id, el) {
+  document.querySelectorAll(".tab-content").forEach(x => x.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(x => x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  el.classList.add("active");
+  if (id === "t-graficos") drawGraphs();
+}
 
-  function switchTab(tabId, el) {
-    document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    document.getElementById(tabId).classList.add("active");
-    el.classList.add("active");
-    if (tabId === "tab-charts") drawCharts();
-  }
+function changeFocus() {
+  db.focus = document.getElementById("sel-focus").value;
+  refreshApps();
+  logEvent(`Enfoque comercial cambiado a: ${document.getElementById("sel-focus").selectedOptions[0].text}`);
+}
 
-  function openModal(id) {
-    document.getElementById("modal-cb-debt").textContent = fmt(state.cbDebt);
-    document.getElementById(id).style.display = "flex";
-  }
+function syncControls() {
+  db.actRate = parseFloat(document.getElementById("rng-act-rate").value);
+  db.savRate = parseFloat(document.getElementById("rng-sav-rate").value);
+  db.cdRate = parseFloat(document.getElementById("rng-cd-rate").value);
+  db.riskCap = parseInt(document.getElementById("rng-risk-cap").value);
 
-  function closeModal(id) {
-    document.getElementById(id).style.display = "none";
-  }
+  document.getElementById("lbl-act-rate").textContent = db.actRate.toFixed(2) + "%";
+  document.getElementById("lbl-sav-rate").textContent = db.savRate.toFixed(2) + "%";
+  document.getElementById("lbl-cd-rate").textContent = db.cdRate.toFixed(2) + "%";
+  document.getElementById("lbl-risk-cap").textContent = `Máx ${db.riskCap}% Mora`;
+}
 
-  function updateRatesUI() {
-    state.loanRate = parseFloat(document.getElementById("inp-loan-rate").value);
-    state.depositRate = parseFloat(document.getElementById("inp-dep-rate").value);
-    state.riskStrictness = parseInt(document.getElementById("inp-risk-strict").value);
+function refreshApps() {
+  db.apps = [];
+  const pool = db.focus === "ALL" ? PRODUCTS : PRODUCTS.filter(p => p.seg === db.focus);
+  const count = 6 + Math.min(6, db.branches);
 
-    document.getElementById("lbl-loan-rate").textContent = state.loanRate.toFixed(2) + "%";
-    document.getElementById("lbl-dep-rate").textContent = state.depositRate.toFixed(2) + "%";
-    
-    const spread = state.loanRate - state.depositRate;
-    const spreadEl = document.getElementById("lbl-spread");
-    spreadEl.textContent = (spread >= 0 ? "+" : "") + spread.toFixed(2) + "%";
-    spreadEl.className = spread >= 2.5 ? "pos" : (spread < 0 ? "neg" : "warn");
+  for (let i = 0; i < count; i++) {
+    const prod = pool[Math.floor(Math.random() * pool.length)];
+    const name = NAMES[Math.floor(Math.random() * NAMES.length)] + ` #${10 + Math.floor(Math.random() * 89)}`;
+    const amt = Math.round((prod.minAmt + Math.random() * (prod.maxAmt - prod.minAmt)) / 50000) * 50000;
+    const q = prod.minQ + Math.floor(Math.random() * (prod.maxQ - prod.minQ + 1));
+    const rate = Math.max(5.0, +(db.actRate + prod.rateAdj + (Math.random() * 2 - 1)).toFixed(2));
+    const defProb = Math.min(0.45, Math.max(0.01, +(prod.baseDef + (Math.random() * 0.08 - 0.02)).toFixed(3)));
 
-    let strictLabel = "Bajo";
-    if (state.riskStrictness >= 75) strictLabel = "Muy Estricto";
-    else if (state.riskStrictness >= 50) strictLabel = "Medio";
-    else if (state.riskStrictness >= 30) strictLabel = "Flexible";
-    document.getElementById("lbl-risk-strict").textContent = `${strictLabel} (${state.riskStrictness}%)`;
-  }
-
-  function generateLoanApplications() {
-    state.loanApps = [];
-    // A mayor tasa activa, menos empresas quieren pedir prestado; a más sucursales y reputación, más demanda
-    const baseCount = Math.floor(3 + state.branches * 1.2 + (state.reputation / 25) - (state.loanRate - state.cbRate) * 0.35);
-    const count = Math.max(2, Math.min(10, baseCount));
-
-    for (let i = 0; i < count; i++) {
-      const sec = SECTORS[Math.floor(Math.random() * SECTORS.length)];
-      // El rigor de riesgo filtra los peores ratings
-      let minRatingIdx = 0;
-      let maxRatingIdx = RATINGS.length - 1;
-      if (state.riskStrictness >= 75) maxRatingIdx = 3; // Solo AAA a BBB
-      else if (state.riskStrictness >= 50) maxRatingIdx = 4; // AAA a BB
-
-      const rIdx = minRatingIdx + Math.floor(Math.random() * (maxRatingIdx - minRatingIdx + 1));
-      const ratingObj = RATINGS[rIdx];
-
-      const amount = Math.round((sec.min + Math.random() * (sec.max - sec.min)) / 50000) * 50000;
-      const quarters = [4, 8, 12, 16, 20][Math.floor(Math.random() * 5)];
-      const effectiveRate = Math.max(2.0, state.loanRate + ratingObj.spreadAdj);
-
-      // Riesgo real ajustado por ciclo económico
-      const macroFactor = state.gdpGrowth < 0 ? 1.45 : (state.gdpGrowth > 3.5 ? 0.85 : 1.0);
-      const realDefaultRisk = Math.min(0.65, ratingObj.probDefault * macroFactor);
-
-      state.loanApps.push({
+    if (defProb * 100 <= db.riskCap) {
+      db.apps.push({
         id: Date.now() + Math.random(),
-        client: `${sec.name} #${100 + Math.floor(Math.random() * 899)}`,
-        rating: ratingObj.code,
-        amount,
-        quarters,
-        rate: effectiveRate,
-        defaultProb: realDefaultRisk
-      });
-    }
-    renderLoans();
-  }
-
-  function approveLoan(id) {
-    if (state.gameOver) return;
-    const idx = state.loanApps.findIndex(l => l.id === id);
-    if (idx === -1) return;
-    const app = state.loanApps[idx];
-
-    if (state.cash < app.amount) {
-      logMsg(`RECHAZADO: Caja insuficiente (${fmt(state.cash)}) para desembolsar ${fmt(app.amount)}.`, "err");
-      return;
-    }
-
-    // Verificar impacto en encaje legal
-    const totalDeposits = state.demandDeposits + state.timeDeposits;
-    const postReserve = (state.cash - app.amount) / Math.max(1, totalDeposits);
-    if (postReserve < 0.10) {
-      logMsg(`ALERTA: Desembolso dejaría encaje en ${(postReserve*100).toFixed(1)}% (Riesgo intervención).`, "warn");
-    }
-
-    state.cash -= app.amount;
-    // Comisión de apertura del 1.0%
-    const fee = app.amount * 0.01;
-    state.cash += fee;
-    state.retainedEarnings += fee;
-    state.lastQuarter.incFees += fee;
-
-    state.activeLoans.push({
-      id: app.id,
-      client: app.client,
-      rating: app.rating,
-      principal: app.amount,
-      balance: app.amount,
-      rate: app.rate,
-      quartersLeft: app.quarters,
-      defaultProb: app.defaultProb,
-      status: "Vigente" // Vigente | Mora
-    });
-
-    state.loanApps.splice(idx, 1);
-    logMsg(`Crédito aprobado a ${app.client} por ${fmt(app.amount)} al ${app.rate.toFixed(2)}%.`, "info");
-    renderAll();
-  }
-
-  function autoApproveGoodLoans() {
-    const good = state.loanApps.filter(l => l.rating === "AAA" || l.rating === "AA");
-    if (good.length === 0) {
-      logMsg("No hay solicitudes AAA o AA pendientes en este trimestre.", "warn");
-      return;
-    }
-    good.forEach(l => approveLoan(l.id));
-  }
-
-  function rejectLoan(id) {
-    state.loanApps = state.loanApps.filter(l => l.id !== id);
-    renderLoans();
-  }
-
-  function forecloseLoan(id) {
-    const idx = state.activeLoans.findIndex(l => l.id === id);
-    if (idx === -1) return;
-    const loan = state.activeLoans[idx];
-    // Ejecución de garantía recupera 55% del saldo vencido
-    const recovered = loan.balance * 0.55;
-    const loss = loan.balance - recovered;
-    state.cash += recovered;
-    state.retainedEarnings -= loss;
-    state.lastQuarter.expProvisions += loss;
-    state.activeLoans.splice(idx, 1);
-    logMsg(`Garantía ejecutada a ${loan.client}: Recuperado ${fmt(recovered)}, Pérdida ${fmt(loss)}.`, "warn");
-    renderAll();
-  }
-
-  function buildBranch() {
-    if (state.gameOver) return;
-    if (state.cash < 1500000) {
-      logMsg("Caja insuficiente para abrir nueva sucursal ($1,500,000 requeridos).", "err");
-      return;
-    }
-    state.cash -= 1500000;
-    state.fixedAssets += 1500000;
-    state.branches += 1;
-    state.reputation = Math.min(100, state.reputation + 3);
-    logMsg(`Nueva sucursal inaugurada. Total sucursales: ${state.branches}.`, "info");
-    renderAll();
-  }
-
-  function closeBranch() {
-    if (state.branches <= 1) {
-      logMsg("Debes mantener al menos 1 sucursal matriz operativa.", "warn");
-      return;
-    }
-    state.branches -= 1;
-    state.fixedAssets -= 1500000;
-    state.cash += 1000000; // Venta con descuento
-    state.retainedEarnings -= 500000;
-    logMsg("Sucursal cerrada y liquidada por $1,000,000.", "warn");
-    renderAll();
-  }
-
-  function tradeBonds(deltaAmount) {
-    if (state.gameOver) return;
-    if (deltaAmount > 0) {
-      if (state.cash < deltaAmount) {
-        logMsg("Caja insuficiente para comprar Bonos Soberanos.", "err");
-        return;
-      }
-      state.cash -= deltaAmount;
-      state.bondsFaceValue += deltaAmount;
-      logMsg(`Comprados ${fmt(deltaAmount)} en Bonos del Tesoro (Precio ${state.bondPrice.toFixed(2)}).`, "info");
-    } else {
-      const sellVal = Math.abs(deltaAmount);
-      if (state.bondsFaceValue < sellVal) {
-        logMsg("No tienes suficientes bonos en cartera para vender esa cantidad.", "err");
-        return;
-      }
-      const marketProceeds = sellVal * (state.bondPrice / 100);
-      const pnl = marketProceeds - sellVal;
-      state.bondsFaceValue -= sellVal;
-      state.cash += marketProceeds;
-      state.retainedEarnings += pnl;
-      logMsg(`Vendidos ${fmt(sellVal)} en Bonos. Resultado por valoración: ${fmt(pnl)}.`, pnl >= 0 ? "pos" : "warn");
-    }
-    renderAll();
-  }
-
-  function issueCD(amount) {
-    if (state.gameOver) return;
-    state.cash += amount;
-    state.timeDeposits += amount;
-    logMsg(`Emitidos Certificados de Depósito (CDs) institucionales por ${fmt(amount)}.`, "info");
-    renderAll();
-  }
-
-  function payDividends() {
-    if (state.gameOver) return;
-    const equity = state.paidInCapital + state.retainedEarnings;
-    if (state.cash < 1000000 || equity < 11000000) {
-      logMsg("No cumples el exceso de capital regulatorio para repartir dividendos.", "err");
-      return;
-    }
-    state.cash -= 1000000;
-    state.retainedEarnings -= 1000000;
-    state.reputation = Math.min(100, state.reputation + 4);
-    logMsg("Dividendos pagados por $1,000,000. Confianza de accionistas al alza.", "info");
-    renderAll();
-  }
-
-  function borrowCentralBank(amount) {
-    state.cash += amount;
-    state.cbDebt += amount;
-    state.reputation = Math.max(10, state.reputation - 4);
-    logMsg(`VENTANILLA BC: Recibido redescuento de ${fmt(amount)} al ${(state.cbRate + 3).toFixed(2)}%.`, "warn");
-    closeModal("modal-emergency");
-    renderAll();
-  }
-
-  function repayCentralBank(amount) {
-    const pay = Math.min(amount, state.cbDebt);
-    if (pay <= 0) return;
-    if (state.cash < pay) {
-      logMsg("Caja insuficiente para amortizar deuda con el Banco Central.", "err");
-      return;
-    }
-    state.cash -= pay;
-    state.cbDebt -= pay;
-    logMsg(`Amortizados ${fmt(pay)} de deuda con el Banco Central.`, "info");
-    closeModal("modal-emergency");
-    renderAll();
-  }
-
-  // MOTOR DE SIMULACIÓN TRIMESTRAL
-  function nextTurn() {
-    if (state.gameOver) return;
-
-    // Reiniciar acumulados del trimestre
-    let incInterest = 0;
-    let incBonds = 0;
-    let incFees = state.lastQuarter.incFees;
-    let expInterest = 0;
-    let expOpex = 0;
-    let expProvisions = 0;
-
-    // 1. Evolución Macroeconómica
-    const shock = (Math.random() - 0.48) * 1.4;
-    state.gdpGrowth = Math.max(-3.5, Math.min(7.5, +(state.gdpGrowth + shock * 0.6).toFixed(2)));
-    state.inflation = Math.max(0.5, Math.min(14.0, +(state.inflation + (state.gdpGrowth - 2.5) * 0.25 + (Math.random() - 0.5) * 0.5).toFixed(2)));
-
-    // Política monetaria del Banco Central (Regla de Taylor simplificada)
-    if (state.inflation > 5.0 && Math.random() < 0.65) {
-      state.cbRate = Math.min(15.0, +(state.cbRate + 0.5).toFixed(2));
-      logMsg(`BANCO CENTRAL SUBE TASA DE REFERENCIA A ${state.cbRate.toFixed(2)}% POR INFLACIÓN.`, "warn");
-    } else if (state.gdpGrowth < 0.5 && Math.random() < 0.65) {
-      state.cbRate = Math.max(1.5, +(state.cbRate - 0.5).toFixed(2));
-      logMsg(`BANCO CENTRAL RECORTA TASA DE REFERENCIA A ${state.cbRate.toFixed(2)}% PARA ESTIMULAR ECONOMÍA.`, "info");
-    }
-
-    // Actualizar precio de bonos inversamente a la tasa del BC
-    state.bondPrice = Math.max(75, Math.min(125, +(100 + (6.0 - state.cbRate) * 3.2).toFixed(2)));
-
-    // 2. Movimiento de Depósitos (Captación vs Fuga)
-    const rateDiff = state.depositRate - (state.cbRate - 1.0);
-    const depositGrowthPct = (rateDiff * 0.025) + ((state.reputation - 50) * 0.0012) + (state.branches * 0.008) + ((Math.random() - 0.5) * 0.03);
-    const deltaDemand = state.demandDeposits * depositGrowthPct;
-    state.demandDeposits = Math.max(500000, state.demandDeposits + deltaDemand);
-    state.cash += deltaDemand;
-    state.clients = Math.max(200, Math.round(state.clients * (1 + depositGrowthPct * 0.7)));
-
-    // 3. Cobro de Cartera de Préstamos y Evaluación de Mora
-    for (let i = state.activeLoans.length - 1; i >= 0; i--) {
-      const loan = state.activeLoans[i];
-
-      if (loan.status === "Vigente") {
-        // Verificar si entra en mora este trimestre
-        const qDefaultProb = loan.defaultProb / 4;
-        if (Math.random() < qDefaultProb) {
-          loan.status = "Mora";
-          const prov = loan.balance * 0.35;
-          state.provisions += prov;
-          expProvisions += prov;
-          logMsg(`IMPAGO: ${loan.client} (${loan.rating}) entró en mora por ${fmt(loan.balance)}.`, "err");
-          continue;
-        }
-
-        // Pago trimestral de intereses + amortización de capital
-        const qInterest = loan.balance * (loan.rate / 100 / 4);
-        const qPrincipal = loan.balance / loan.quartersLeft;
-
-        incInterest += qInterest;
-        state.cash += (qInterest + qPrincipal);
-        loan.balance -= qPrincipal;
-        loan.quartersLeft -= 1;
-
-        if (loan.quartersLeft <= 0 || loan.balance <= 10) {
-          state.activeLoans.splice(i, 1);
-        }
-      } else {
-        // Si ya está en mora y lleva mucho tiempo, castigo adicional
-        if (Math.random() < 0.25) {
-          const extraProv = loan.balance * 0.15;
-          state.provisions += extraProv;
-          expProvisions += extraProv;
-        }
-      }
-    }
-
-    // 4. Rendimiento de Bonos y Comisiones de Clientes
-    incBonds = state.bondsFaceValue * (0.06 / 4);
-    incFees += state.clients * 22; // Mantenimiento de cuentas y tarjetas
-    state.cash += (incBonds + state.clients * 22);
-
-    // 5. Pago de Intereses Pasivos y Gastos Operativos
-    const costDemand = state.demandDeposits * (state.depositRate / 100 / 4);
-    const costTime = state.timeDeposits * ((state.depositRate + 1.5) / 100 / 4);
-    const costCB = state.cbDebt * ((state.cbRate + 3.0) / 100 / 4);
-    expInterest = costDemand + costTime + costCB;
-
-    expOpex = (state.branches * 120000) + (state.activeLoans.length * 4500) + 85000;
-    state.cash -= (expInterest + expOpex);
-
-    // 6. Resultado Neto del Trimestre
-    const netIncome = (incInterest + incBonds + incFees) - (expInterest + expOpex + expProvisions);
-    state.retainedEarnings += netIncome;
-
-    state.lastQuarter = {
-      incInterest,
-      incBonds,
-      incFees,
-      expInterest,
-      expOpex,
-      expProvisions,
-      netIncome
-    };
-
-    // 7. Supervisión Bancaria (Encaje Legal y Solvencia)
-    const totalDeposits = state.demandDeposits + state.timeDeposits;
-    const reserveRatio = (state.cash / Math.max(1, totalDeposits)) * 100;
-    const equity = state.paidInCapital + state.retainedEarnings;
-
-    if (reserveRatio < 15.0) {
-      const fine = (totalDeposits * 0.15 - state.cash) * 0.08;
-      state.cash -= fine;
-      state.retainedEarnings -= fine;
-      state.reputation = Math.max(5, state.reputation - 8);
-      logMsg(`MULTA REGULATORIA: Encaje legal en ${reserveRatio.toFixed(1)}% (<15%). Multa de ${fmt(fine)}.`, "err");
-    } else if (netIncome > 0) {
-      state.reputation = Math.min(100, state.reputation + 1);
-    }
-
-    // Avanzar fecha
-    state.quarter += 1;
-    if (state.quarter > 4) {
-      state.quarter = 1;
-      state.year += 1;
-    }
-
-    // Guardar historial para gráficos
-    const totalLoansVal = state.activeLoans.reduce((s, l) => s + l.balance, 0);
-    state.history.labels.push(`T${state.quarter}-${String(state.year).slice(-2)}`);
-    state.history.equity.push(+(equity / 1e6).toFixed(2));
-    state.history.loans.push(+(totalLoansVal / 1e6).toFixed(2));
-    state.history.deposits.push(+(totalDeposits / 1e6).toFixed(2));
-    state.history.loanRate.push(state.loanRate);
-    state.history.depRate.push(state.depositRate);
-    state.history.cbRate.push(state.cbRate);
-
-    if (state.history.labels.length > 24) {
-      Object.keys(state.history).forEach(k => state.history[k].shift());
-    }
-
-    // Verificar Quiebra o Corrida Bancaria
-    if (equity <= 0 || state.cash < -500000) {
-      state.gameOver = true;
-      logMsg("🚨 INTERVENCIÓN DEL BANCO CENTRAL: INSOLVENCIA PATRIMONIAL. LICENCIA REVOCADA.", "err");
-      alert("¡BANCO INTERVENIDO! Tu patrimonio o liquidez cayeron a niveles críticos. Pulsa 'Reiniciar Banco' para intentarlo de nuevo.");
-    } else {
-      generateLoanApplications();
-    }
-
-    // Resetear comisiones temporales para el siguiente turno
-    state.lastQuarter.incFees = 0;
-    renderAll();
-  }
-
-  function renderLoans() {
-    document.getElementById("badge-loans").textContent = state.loanApps.length;
-    const appsBody = document.getElementById("loan-apps-body");
-    appsBody.innerHTML = "";
-
-    if (state.loanApps.length === 0) {
-      appsBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#666;">No quedan solicitudes pendientes este trimestre.</td></tr>`;
-    } else {
-      state.loanApps.forEach(app => {
-        const riskPct = (app.defaultProb * 100).toFixed(1) + "%";
-        const rClass = app.defaultProb > 0.15 ? "neg" : (app.defaultProb > 0.06 ? "warn" : "pos");
-        appsBody.innerHTML += `
-          <tr>
-            <td>${app.client}</td>
-            <td><b>${app.rating}</b></td>
-            <td class="num">${fmt(app.amount)}</td>
-            <td class="num">${app.quarters} trim.</td>
-            <td class="num">${app.rate.toFixed(2)}%</td>
-            <td class="num ${rClass}">${riskPct}</td>
-            <td>
-              <button onclick="approveLoan(${app.id})" style="padding:1px 6px;">✔</button>
-              <button onclick="rejectLoan(${app.id})" style="padding:1px 6px;">✖</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    const actBody = document.getElementById("active-loans-body");
-    actBody.innerHTML = "";
-    if (state.activeLoans.length === 0) {
-      actBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#666;">Cartera de préstamos vacía. Aprueba solicitudes arriba para generar intereses.</td></tr>`;
-    } else {
-      state.activeLoans.forEach(l => {
-        const isBad = l.status === "Mora";
-        actBody.innerHTML += `
-          <tr style="${isBad ? 'background:#ffe6e6;' : ''}">
-            <td>${l.client}</td>
-            <td><b>${l.rating}</b></td>
-            <td class="num">${fmt(l.balance)}</td>
-            <td class="num">${l.rate.toFixed(2)}%</td>
-            <td class="num">${l.quartersLeft}</td>
-            <td class="${isBad ? 'neg' : 'pos'}"><b>${l.status}</b></td>
-            <td>${isBad ? `<button onclick="forecloseLoan(${l.id})" style="padding:1px 5px;">Embargar</button>` : '-'}</td>
-          </tr>
-        `;
+        name,
+        seg: prod.seg,
+        label: prod.label,
+        collateral: prod.collateral,
+        amt,
+        q,
+        rate,
+        defProb
       });
     }
   }
+  renderTables();
+}
 
-  function renderAll() {
-    updateRatesUI();
-    renderLoans();
+function approveApp(id) {
+  if (db.locked) return;
+  const idx = db.apps.findIndex(a => a.id === id);
+  if (idx === -1) return;
+  const a = db.apps[idx];
 
-    const goodLoans = state.activeLoans.filter(l => l.status === "Vigente").reduce((s, l) => s + l.balance, 0);
-    const badLoans = state.activeLoans.filter(l => l.status === "Mora").reduce((s, l) => s + l.balance, 0);
-    const totalLoans = goodLoans + badLoans;
-    const totalDeposits = state.demandDeposits + state.timeDeposits;
-    const totalAssets = state.cash + state.bondsFaceValue + totalLoans - state.provisions + state.fixedAssets;
-    const totalLiab = totalDeposits + state.cbDebt;
-    const equity = state.paidInCapital + state.retainedEarnings;
-
-    // Ratios
-    const reserveRatio = totalDeposits > 0 ? (state.cash / totalDeposits) * 100 : 100;
-    // Activos ponderados por riesgo (Bonos 0%, Cartera 100%, Inmuebles 100%)
-    const rwa = Math.max(1, totalLoans + state.fixedAssets);
-    const car = (equity / rwa) * 100;
-    const nplRatio = totalLoans > 0 ? (badLoans / totalLoans) * 100 : 0;
-
-    // KPIs superiores
-    document.getElementById("clock-display").textContent = `TRIMESTRE ${state.quarter} - AÑO ${state.year}`;
-    document.getElementById("kpi-equity").textContent = fmt(equity);
-    document.getElementById("kpi-equity").className = "kpi-val " + (equity >= 10000000 ? "pos" : "neg");
-    document.getElementById("kpi-cash").textContent = fmt(state.cash);
-
-    const resEl = document.getElementById("kpi-reserve-ratio");
-    resEl.textContent = reserveRatio.toFixed(1) + "%";
-    resEl.className = "kpi-val " + (reserveRatio >= 15 ? "pos" : "neg");
-
-    const carEl = document.getElementById("kpi-car");
-    carEl.textContent = car.toFixed(1) + "%";
-    carEl.className = "kpi-val " + (car >= 10 ? "pos" : "neg");
-
-    document.getElementById("kpi-cb-rate").textContent = state.cbRate.toFixed(2) + "%";
-    document.getElementById("kpi-macro").textContent = `${state.inflation.toFixed(1)}% / ${state.gdpGrowth >= 0 ? '+' : ''}${state.gdpGrowth.toFixed(1)}%`;
-
-    let bankRating = "AAA";
-    if (state.reputation < 35) bankRating = "CCC";
-    else if (state.reputation < 50) bankRating = "B";
-    else if (state.reputation < 65) bankRating = "BB";
-    else if (state.reputation < 80) bankRating = "BBB";
-    else if (state.reputation < 92) bankRating = "A";
-    document.getElementById("kpi-rating").textContent = `${bankRating} (${state.reputation}/100)`;
-
-    document.getElementById("lbl-branches").textContent = `${state.branches} (${fmt(state.branches * 120000)}/trim)`;
-
-    // Estado de Resultados
-    const lq = state.lastQuarter;
-    document.getElementById("inc-interest").textContent = fmt(lq.incInterest);
-    document.getElementById("inc-bonds").textContent = fmt(lq.incBonds);
-    document.getElementById("inc-fees").textContent = fmt(lq.incFees);
-    document.getElementById("exp-interest").textContent = fmt(-lq.expInterest);
-    document.getElementById("exp-opex").textContent = fmt(-lq.expOpex);
-    document.getElementById("exp-provisions").textContent = fmt(-lq.expProvisions);
-    const netEl = document.getElementById("net-income");
-    netEl.textContent = fmt(lq.netIncome);
-    netEl.className = "num " + (lq.netIncome >= 0 ? "pos" : "neg");
-
-    // Balance Contable
-    document.getElementById("bs-cash").textContent = fmt(state.cash);
-    document.getElementById("bs-bonds").textContent = fmt(state.bondsFaceValue);
-    document.getElementById("bs-loans-good").textContent = fmt(goodLoans);
-    document.getElementById("bs-loans-bad").textContent = fmt(badLoans);
-    document.getElementById("bs-provisions").textContent = fmt(-state.provisions);
-    document.getElementById("bs-fixed").textContent = fmt(state.fixedAssets);
-    document.getElementById("bs-total-assets").textContent = fmt(totalAssets);
-
-    document.getElementById("bs-dep-demand").textContent = fmt(state.demandDeposits);
-    document.getElementById("bs-dep-time").textContent = fmt(state.timeDeposits);
-    document.getElementById("bs-cb-debt").textContent = fmt(state.cbDebt);
-    document.getElementById("bs-total-liab").textContent = fmt(totalLiab);
-    document.getElementById("bs-retained").textContent = fmt(state.retainedEarnings);
-    document.getElementById("bs-total-eq-liab").textContent = fmt(totalLiab + equity);
-
-    // Indicadores Basilea
-    const nplEl = document.getElementById("ind-npl");
-    nplEl.textContent = nplRatio.toFixed(2) + "%";
-    nplEl.className = nplRatio > 6 ? "neg" : "pos";
-
-    const nim = totalAssets > 0 ? (((lq.incInterest + lq.incBonds - lq.expInterest) * 4) / totalAssets) * 100 : 0;
-    document.getElementById("ind-nim").textContent = nim.toFixed(2) + "%";
-
-    const roe = equity > 0 ? ((lq.netIncome * 4) / equity) * 100 : 0;
-    document.getElementById("ind-roe").textContent = roe.toFixed(2) + "%";
-
-    // Tesorería
-    document.getElementById("bond-price").textContent = "$" + state.bondPrice.toFixed(2);
-    document.getElementById("bond-yield").textContent = ((6.0 / state.bondPrice) * 100).toFixed(2) + "%";
-    document.getElementById("bond-holdings").textContent = fmt(state.bondsFaceValue);
-
-    // Barra estado
-    document.getElementById("status-clients").textContent = `Clientes Activos: ${state.clients.toLocaleString()} | Empleados: ${state.branches * 18}`;
-    document.getElementById("status-msg").textContent = reserveRatio < 15
-      ? "⚠️ ALERTA: Encaje legal por debajo del 15% obligatorio."
-      : "Estado: Operando dentro de parámetros regulatorios.";
-
-    if (document.getElementById("tab-charts").classList.contains("active")) {
-      drawCharts();
-    }
+  if (db.cashHnl < a.amt) {
+    logEvent(`Caja HNL insuficiente para desembolsar ${fmtL(a.amt)} a ${a.name}.`, "neg");
+    return;
   }
 
-  // MOTOR GRÁFICO RETRO EN CANVAS (ESTILO TERMINAL AÑOS 90)
-  function drawCharts() {
-    drawLineChart("retroChart", state.history.labels, [
-      { data: state.history.equity, color: "#00ff66" },
-      { data: state.history.loans, color: "#00ccff" },
-      { data: state.history.deposits, color: "#ffcc00" }
-    ], "$M");
+  db.cashHnl -= a.amt;
+  const fee = a.amt * 0.015;
+  db.cashHnl += fee;
+  db.retained += fee;
+  db.pl.incFees += fee;
 
-    drawLineChart("ratesChart", state.history.labels, [
-      { data: state.history.loanRate, color: "#ff5555" },
-      { data: state.history.depRate, color: "#55ff55" },
-      { data: state.history.cbRate, color: "#ffffff" }
-    ], "%");
-  }
+  db.loans.push({
+    id: a.id,
+    name: a.name,
+    label: a.label,
+    collateral: a.collateral,
+    bal: a.amt,
+    rate: a.rate,
+    qLeft: a.q,
+    defProb: a.defProb,
+    status: "Vigente"
+  });
 
-  function drawLineChart(canvasId, labels, series, suffix) {
-    const canvas = document.getElementById(canvasId);
-    const ctx = canvas.getContext("2d");
-    const w = canvas.width;
-    const h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
-
-    // Rejilla CRT verde oscuro
-    ctx.strokeStyle = "#143820";
-    ctx.lineWidth = 1;
-    for (let x = 45; x < w; x += 45) {
-      ctx.beginPath(); ctx.moveTo(x, 10); ctx.lineTo(x, h - 22); ctx.stroke();
-    }
-    for (let y = 15; y < h - 20; y += 30) {
-      ctx.beginPath(); ctx.moveTo(45, y); ctx.lineTo(w - 10, y); ctx.stroke();
-    }
-
-    let allVals = [];
-    series.forEach(s => allVals.push(...s.data));
-    const maxVal = Math.max(10, Math.ceil(Math.max(...allVals) * 1.15));
-    const minVal = Math.min(0, Math.floor(Math.min(...allVals)));
-    const range = Math.max(1, maxVal - minVal);
-
-    // Ejes y etiquetas Y
-    ctx.fillStyle = "#00ff66";
-    ctx.font = "10px Courier New";
-    for (let i = 0; i <= 4; i++) {
-      const val = minVal + (range * i / 4);
-      const yPos = (h - 24) - ((val - minVal) / range) * (h - 38);
-      ctx.fillText(val.toFixed(1) + suffix, 4, yPos + 3);
-    }
-
-    // Dibujar series
-    const stepX = (w - 65) / Math.max(1, labels.length - 1);
-    series.forEach(s => {
-      ctx.strokeStyle = s.color;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      s.data.forEach((v, idx) => {
-        const x = 50 + idx * stepX;
-        const y = (h - 24) - ((v - minVal) / range) * (h - 38);
-        if (idx === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Puntos cuadrados retro
-      ctx.fillStyle = s.color;
-      s.data.forEach((v, idx) => {
-        const x = 50 + idx * stepX;
-        const y = (h - 24) - ((v - minVal) / range) * (h - 38);
-        ctx.fillRect(x - 2, y - 2, 4, 4);
-      });
-    });
-
-    // Etiquetas eje X
-    ctx.fillStyle = "#88cc99";
-    labels.forEach((lbl, idx) => {
-      if (labels.length <= 12 || idx % 2 === 0) {
-        const x = 42 + idx * stepX;
-        ctx.fillText(lbl, x, h - 6);
-      }
-    });
-  }
-
-  function resetGame() {
-    location.reload();
-  }
-
-  // Inicialización
-  generateLoanApplications();
+  db.apps.splice(idx, 1);
+  logEvent(`Aprobado ${a.label} a ${a.name} por ${fmtL(a.amt)} (${a.rate.toFixed(2)}%).`, "pos");
   renderAll();
+}
+
+function rejectApp(id) {
+  db.apps = db.apps.filter(a => a.id !== id);
+  renderTables();
+}
+
+function approveLowRisk() {
+  const low = db.apps.filter(a => a.defProb < 0.06);
+  if (!low.length) {
+    logEvent("No hay solicitudes con probabilidad de mora menor al 6%.", "warn");
+    return;
+  }
+  low.forEach(a => approveApp(a.id));
+}
+
+function seizeOrRecover(id) {
+  const idx = db.loans.findIndex(l => l.id === id);
+  if (idx === -1) return;
+  const l = db.loans[idx];
+
+  if (l.label.includes("Hipotecario") || l.label.includes("Vehicular")) {
+    const val = Math.round(l.bal * 0.65);
+    db.eventualAssets.push({
+      id: Date.now() + Math.random(),
+      title: l.label.includes("Hipotecario") ? `Inmueble Adjudicado (${l.name})` : `Vehículo Adjudicado (${l.name})`,
+      origin: l.label,
+      bookVal: val
+    });
+    logEvent(`Adjudicado a Activo Eventual: ${l.name} por ${fmtL(val)}.`, "warn");
+  } else {
+    const rec = Math.round(l.bal * 0.30);
+    db.cashHnl += rec;
+    db.retained += rec;
+    logEvent(`Recuperación parcial de cartera castigada (${l.name}): ${fmtL(rec)}.`);
+  }
+  db.loans.splice(idx, 1);
+  renderAll();
+}
+
+function sellEventual(idx) {
+  const item = db.eventualAssets[idx];
+  if (!item) return;
+  const sale = Math.round(item.bookVal * 0.92);
+  const diff = sale - item.bookVal;
+  db.cashHnl += sale;
+  db.retained += diff;
+  db.pl.incFees += diff;
+  db.eventualAssets.splice(idx, 1);
+  logEvent(`Vendido Activo Eventual (${item.title}) por ${fmtL(sale)}.`, diff >= 0 ? "pos" : "warn");
+  renderAll();
+}
+
+function attractDeposits(type, amt) {
+  if (db.locked) return;
+  db.cashHnl += amt;
+  if (type === "SAVINGS") {
+    db.savingsDep += amt;
+    db.clients += 180;
+    logEvent(`Captados ${fmtL(amt)} en Cuentas de Ahorro (Tasa ${db.savRate.toFixed(2)}%).`, "pos");
+  } else if (type === "CHECKING") {
+    db.checkingDep += amt;
+    db.clients += 65;
+    logEvent(`Captados ${fmtL(amt)} en Cuentas de Cheques operativas.`, "pos");
+  } else if (type === "CDP") {
+    const qTerm = amt >= 45000000 ? 8 : 4;
+    db.cdps.push({
+      id: Date.now() + Math.random(),
+      name: `CDP ${qTerm}T #${100 + db.cdps.length}`,
+      amount: amt,
+      rate: db.cdRate,
+      qLeft: qTerm
+    });
+    logEvent(`Emitido CDP por ${fmtL(amt)} a ${qTerm} trimestres (${db.cdRate.toFixed(2)}%).`, "pos");
+  }
+  renderAll();
+}
+
+function tradeFX(side, usdAmt) {
+  if (db.locked) return;
+  const spread = 0.18;
+  const commRate = 0.012;
+  if (side === "BUY") {
+    const costHnl = usdAmt * (db.fxRate + spread);
+    const comm = costHnl * commRate;
+    if (db.cashHnl < costHnl + comm) {
+      logEvent("Fondos HNL insuficientes para comprar dólares en subasta.", "neg");
+      return;
+    }
+    db.cashHnl -= (costHnl + comm);
+    db.usdBalance += usdAmt;
+    db.retained += comm;
+    db.pl.incFees += comm;
+    logEvent(`Subasta FX: Comprados ${fmtU(usdAmt)} a L ${(db.fxRate + spread).toFixed(2)}.`, "pos");
+  } else {
+    if (db.usdBalance < usdAmt) {
+      logEvent("Saldo en USD insuficiente para vender en subasta.", "neg");
+      return;
+    }
+    const grossHnl = usdAmt * (db.fxRate - spread);
+    const comm = grossHnl * commRate;
+    db.usdBalance -= usdAmt;
+    db.cashHnl += (grossHnl - comm);
+    db.retained += comm;
+    db.pl.incFees += comm;
+    logEvent(`Subasta FX: Vendidos ${fmtU(usdAmt)} a L ${(db.fxRate - spread).toFixed(2)}.`, "pos");
+  }
+  renderAll();
+}
+
+function issueLetterOfCredit() {
+  if (db.locked) return;
+  const fee = 1200000;
+  db.cashHnl += fee;
+  db.retained += fee;
+  db.pl.incFees += fee;
+  db.reputation = Math.min(100, db.reputation + 1);
+  logEvent(`Carta de Crédito Internacional emitida. Comisión ganada: ${fmtL(fee)}.`, "pos");
+  renderAll();
+}
+
+function payDividend() {
+  if (db.locked) return;
+  const div = 15000000;
+  const eq = db.paidCap + db.retained;
+  if (db.cashHnl < div || eq < 135000000) {
+    logEvent("No cumples liquidez o capital mínimo para repartir dividendos.", "neg");
+    return;
+  }
+  db.cashHnl -= div;
+  db.retained -= div;
+  db.reputation = Math.min(100, db.reputation + 2);
+  logEvent(`Dividendos pagados a accionistas por ${fmtL(div)}.`, "warn");
+  renderAll();
+}
+
+function requestRediscount() {
+  const amt = 20000000;
+  db.cashHnl += amt;
+  db.rediscount += amt;
+  db.reputation = Math.max(10, db.reputation - 3);
+  logEvent(`Redescuento Banco Central recibido: +${fmtL(amt)} (Tasa TPM + 2.5%).`, "warn");
+  renderAll();
+}
+
+function repayRediscount() {
+  const pay = Math.min(20000000, db.rediscount);
+  if (pay <= 0) return;
+  if (db.cashHnl < pay) {
+    logEvent("Caja HNL insuficiente para abonar al redescuento.", "neg");
+    return;
+  }
+  db.cashHnl -= pay;
+  db.rediscount -= pay;
+  logEvent(`Abonado al redescuento Banco Central: -${fmtL(pay)}.`, "pos");
+  renderAll();
+}
+
+function openBranch() {
+  if (db.locked) return;
+  const cost = 12000000;
+  if (db.cashHnl < cost) {
+    logEvent("Caja HNL insuficiente para abrir agencia (L 12,000,000).", "neg");
+    return;
+  }
+  db.cashHnl -= cost;
+  db.fixedAssets += cost;
+  db.branches += 1;
+  db.reputation = Math.min(100, db.reputation + 2);
+  logEvent(`Nueva agencia inaugurada (#${db.branches}). Más captación y colocación.`, "pos");
+  renderAll();
+}
+
+function closeBranch() {
+  if (db.branches <= 1) {
+    logEvent("Debe permanecer al menos 1 agencia principal.", "warn");
+    return;
+  }
+  db.branches -= 1;
+  db.fixedAssets -= 12000000;
+  db.cashHnl += 9000000;
+  db.retained -= 3000000;
+  logEvent("Agencia cerrada y liquidada por L 9,000,000.", "warn");
+  renderAll();
+}
+
+function nextQuarter() {
+  if (db.locked) return;
+
+  let incLoans = 0;
+  let incFees = db.pl.incFees;
+  let expDep = 0;
+  let expOpex = 0;
+  let expProv = 0;
+
+  // Evolución macro y tipo de cambio
+  db.fxRate = +(db.fxRate * (1 + (Math.random() * 0.024 - 0.006))).toFixed(2);
+  db.tpm = Math.max(3.5, Math.min(12.0, +(db.tpm + (Math.random() * 0.8 - 0.35)).toFixed(2)));
+
+  // Cobro de préstamos y mora
+  for (let i = db.loans.length - 1; i >= 0; i--) {
+    const l = db.loans[i];
+    if (l.status === "Vigente") {
+      if (Math.random() < l.defProb / 4) {
+        l.status = "Mora";
+        const prov = l.bal * 0.30;
+        db.provisions += prov;
+        expProv += prov;
+        logEvent(`MORA: ${l.name} (${l.label}) atrasado por ${fmtL(l.bal)}.`, "neg");
+        continue;
+      }
+      const qInt = l.bal * (l.rate / 100 / 4);
+      const qPrin = l.bal / l.qLeft;
+      incLoans += qInt;
+      db.cashHnl += (qInt + qPrin);
+      l.bal -= qPrin;
+      l.qLeft -= 1;
+      if (l.qLeft <= 0 || l.bal <= 5) db.loans.splice(i, 1);
+    } else {
+      if (Math.random() < 0.25) {
+        const addProv = l.bal * 0.15;
+        db.provisions += addProv;
+        expProv += addProv;
+      }
+    }
+  }
+
+  // Comisiones operativas por clientes y remesas/servicios
+  const svcFee = db.clients * 45;
+  incFees += svcFee;
+  db.cashHnl += svcFee;
+
+  // Intereses pagados por ahorro, cheques (baja tasa 0.5%) y CDPs
+  const cdpTotal = db.cdps.reduce((s, c) => s + c.amount, 0);
+  const intSav = db.savingsDep * (db.savRate / 100 / 4);
+  const intChk = db.checkingDep * (0.005 / 4);
+  const intCdp = db.cdps.reduce((s, c) => s + c.amount * (c.rate / 100 / 4), 0);
+  const intRed = db.rediscount * ((db.tpm + 2.5) / 100 / 4);
+  expDep = intSav + intChk + intCdp + intRed;
+
+  // Vencimiento de CDPs
+  for (let i = db.cdps.length - 1; i >= 0; i--) {
+    db.cdps[i].qLeft -= 1;
+    if (db.cdps[i].qLeft <= 0) {
+      logEvent(`Venció ${db.cdps[i].name} por ${fmtL(db.cdps[i].amount)}.`);
+      db.cdps.splice(i, 1);
+    }
+  }
+
+  // Gastos operativos de agencias y personal
+  expOpex = db.branches * 1850000 + db.loans.length * 35000;
+  db.cashHnl -= (expDep + expOpex);
+
+  // Flujo natural de depósitos según tasa de ahorro
+  const depDeltaPct = ((db.savRate - 3.0) * 0.018) + ((db.reputation - 60) * 0.0008);
+  const dSav = db.savingsDep * depDeltaPct;
+  db.savingsDep = Math.max(10000000, db.savingsDep + dSav);
+  db.cashHnl += dSav;
+
+  // Resultado neto
+  const net = (incLoans + incFees) - (expDep + expOpex + expProv);
+  db.retained += net;
+  db.pl = { incLoans, incFees, expDep, expOpex, expProv, net };
+  db.pl.incFees = 0;
+
+  // Encaje legal sobre captación total (mínimo 15%)
+  const totDep = db.savingsDep + db.checkingDep + cdpTotal;
+  const encaje = totDep > 0 ? (db.cashHnl / totDep) * 100 : 100;
+  if (encaje < 15.0) {
+    const fine = Math.max(500000, (totDep * 0.15 - db.cashHnl) * 0.06);
+    db.cashHnl -= fine;
+    db.retained -= fine;
+    db.reputation = Math.max(5, db.reputation - 6);
+    logEvent(`MULTA ENCAJE (${encaje.toFixed(1)}% < 15%): ${fmtL(fine)}.`, "neg");
+  } else if (net > 0) {
+    db.reputation = Math.min(100, db.reputation + 1);
+  }
+
+  // Avanzar trimestre
+  db.q += 1;
+  if (db.q > 4) {
+    db.q = 1;
+    db.yr += 1;
+  }
+
+  const eq = db.paidCap + db.retained;
+  const loansSum = db.loans.reduce((s, l) => s + l.bal, 0);
+  db.hist.labels.push(`T${db.q}-${String(db.yr).slice(-2)}`);
+  db.hist.eq.push(+(eq / 1e6).toFixed(1));
+  db.hist.loans.push(+(loansSum / 1e6).toFixed(1));
+  db.hist.dep.push(+(totDep / 1e6).toFixed(1));
+  db.hist.act.push(db.actRate);
+  db.hist.cdp.push(db.cdRate);
+  db.hist.tpm.push(db.tpm);
+
+  if (db.hist.labels.length > 24) {
+    Object.keys(db.hist).forEach(k => db.hist[k].shift());
+  }
+
+  if (eq <= 0 || db.cashHnl < -10000000) {
+    db.locked = true;
+    logEvent("🚨 INTERVENCIÓN REGULATORIA: PATRIMONIO O LIQUIDEZ EN NIVEL CRÍTICO.", "neg");
+    alert("¡El banco ha sido intervenido por falta de capital o liquidez! Pulsa 'Reiniciar' para empezar de nuevo.");
+  } else {
+    refreshApps();
+  }
+
+  renderAll();
+}
+
+function renderTables() {
+  document.getElementById("cnt-apps").textContent = db.apps.length;
+  const tbApps = document.getElementById("tbody-apps");
+  tbApps.innerHTML = "";
+
+  if (!db.apps.length) {
+    tbApps.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No hay solicitudes pendientes bajo el filtro actual.</td></tr>`;
+  } else {
+    db.apps.forEach(a => {
+      const mPct = (a.defProb * 100).toFixed(1) + "%";
+      const cls = a.defProb > 0.14 ? "neg" : (a.defProb > 0.06 ? "warn" : "pos");
+      tbApps.innerHTML += `
+        <tr>
+          <td><b>${a.name}</b><br><small style="color:var(--text-muted);">Garantía: ${a.collateral}</small></td>
+          <td><span class="badge-seg">${a.seg}</span></td>
+          <td>${a.label}</td>
+          <td class="num mono">${fmtL(a.amt)}</td>
+          <td class="num mono">${a.q}T</td>
+          <td class="num mono">${a.rate.toFixed(2)}%</td>
+          <td class="num mono ${cls}">${mPct}</td>
+          <td>
+            <button onclick="approveApp(${a.id})" style="padding:2px 6px;">Aprobar</button>
+            <button onclick="rejectApp(${a.id})" style="padding:2px 6px;">Rechazar</button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  const tbLoans = document.getElementById("tbody-loans");
+  tbLoans.innerHTML = "";
+  if (!db.loans.length) {
+    tbLoans.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sin préstamos activos en cartera.</td></tr>`;
+  } else {
+    db.loans.forEach(l => {
+      const bad = l.status === "Mora";
+      tbLoans.innerHTML += `
+        <tr>
+          <td>${l.name}</td>
+          <td>${l.label}</td>
+          <td class="num mono">${fmtL(l.bal)}</td>
+          <td class="num mono">${l.rate.toFixed(2)}%</td>
+          <td class="num mono">${l.qLeft}</td>
+          <td class="${bad ? 'neg' : 'pos'}"><b>${l.status}</b></td>
+          <td>${bad ? `<button onclick="seizeOrRecover(${l.id})" style="padding:2px 6px;">Ejecutar / Cobrar</button>` : "-"}</td>
+        </tr>
+      `;
+    });
+  }
+
+  const tbCdps = document.getElementById("tbody-cdps");
+  tbCdps.innerHTML = "";
+  db.cdps.forEach(c => {
+    tbCdps.innerHTML += `
+      <tr>
+        <td>${c.name}</td>
+        <td class="num mono">${fmtL(c.amount)}</td>
+        <td class="num mono">${c.rate.toFixed(2)}%</td>
+        <td class="num mono">${c.qLeft}T</td>
+      </tr>
+    `;
+  });
+
+  const tbEv = document.getElementById("tbody-eventual");
+  tbEv.innerHTML = "";
+  if (!db.eventualAssets.length) {
+    tbEv.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Sin activos eventuales adjudicados.</td></tr>`;
+  } else {
+    db.eventualAssets.forEach((ev, i) => {
+      tbEv.innerHTML += `
+        <tr>
+          <td>${ev.title}</td>
+          <td>${ev.origin}</td>
+          <td class="num mono">${fmtL(ev.bookVal)}</td>
+          <td><button onclick="sellEventual(${i})" style="padding:2px 6px;">Vender (-8%)</button></td>
+        </tr>
+      `;
+    });
+  }
+}
+
+function renderAll() {
+  syncControls();
+  renderTables();
+
+  const okLoans = db.loans.filter(l => l.status === "Vigente").reduce((s, l) => s + l.bal, 0);
+  const badLoans = db.loans.filter(l => l.status === "Mora").reduce((s, l) => s + l.bal, 0);
+  const evVal = db.eventualAssets.reduce((s, e) => s + e.bookVal, 0);
+  const usdHnl = db.usdBalance * db.fxRate;
+  const totAssets = db.cashHnl + usdHnl + okLoans + badLoans + evVal - db.provisions + db.fixedAssets;
+
+  const cdpVal = db.cdps.reduce((s, c) => s + c.amount, 0);
+  const depLiq = db.savingsDep + db.checkingDep;
+  const totDep = depLiq + cdpVal;
+  const totLiab = totDep + db.rediscount;
+  const eq = db.paidCap + db.retained;
+
+  const encaje = totDep > 0 ? (db.cashHnl / totDep) * 100 : 100;
+  const rwa = Math.max(1, okLoans + badLoans + evVal + db.fixedAssets);
+  const car = (eq / rwa) * 100;
+
+  document.getElementById("clock-lbl").textContent = `TRIMESTRE ${db.q} — AÑO ${db.yr}`;
+  document.getElementById("fx-lbl").textContent = `USD/HNL: L ${db.fxRate.toFixed(2)}`;
+  document.getElementById("fx-spot").textContent = `L ${db.fxRate.toFixed(2)} / $1`;
+  document.getElementById("fx-pos").textContent = fmtU(db.usdBalance);
+
+  document.getElementById("kpi-equity").textContent = fmtL(eq);
+  document.getElementById("kpi-equity").className = "kpi-val mono " + (eq >= db.paidCap ? "pos" : "neg");
+  document.getElementById("kpi-cash-hnl").textContent = fmtL(db.cashHnl);
+  document.getElementById("kpi-usd").textContent = fmtU(db.usdBalance);
+
+  const encEl = document.getElementById("kpi-encaje");
+  encEl.textContent = encaje.toFixed(1) + "%";
+  encEl.className = "kpi-val mono " + (encaje >= 15 ? "pos" : "neg");
+
+  const carEl = document.getElementById("kpi-car");
+  carEl.textContent = car.toFixed(1) + "%";
+  carEl.className = "kpi-val mono " + (car >= 10 ? "pos" : "neg");
+
+  document.getElementById("kpi-tpm").textContent = db.tpm.toFixed(2) + "%";
+
+  let grade = "AA+";
+  if (db.reputation < 40) grade = "B";
+  else if (db.reputation < 60) grade = "BBB";
+  else if (db.reputation < 75) grade = "A";
+  document.getElementById("kpi-rating").textContent = `${grade} (${db.reputation}/100)`;
+  document.getElementById("lbl-branches").textContent = `${db.branches} Agencias`;
+
+  // Captación
+  document.getElementById("dep-sav").textContent = fmtL(db.savingsDep);
+  document.getElementById("dep-chk").textContent = fmtL(db.checkingDep);
+  document.getElementById("dep-cdp").textContent = fmtL(cdpVal);
+  document.getElementById("dep-tot").textContent = fmtL(totDep);
+
+  // Estado de resultados
+  document.getElementById("pl-inc-loans").textContent = fmtL(db.pl.incLoans);
+  document.getElementById("pl-inc-fees").textContent = fmtL(db.pl.incFees);
+  document.getElementById("pl-exp-dep").textContent = fmtL(-db.pl.expDep);
+  document.getElementById("pl-exp-opex").textContent = fmtL(-db.pl.expOpex);
+  document.getElementById("pl-exp-prov").textContent = fmtL(-db.pl.expProv);
+  const netEl = document.getElementById("pl-net");
+  netEl.textContent = fmtL(db.pl.net);
+  netEl.className = "num mono " + (db.pl.net >= 0 ? "pos" : "neg");
+
+  // Balance
+  document.getElementById("bs-tot-assets").textContent = fmtL(totAssets);
+  document.getElementById("bs-cash-hnl").textContent = fmtL(db.cashHnl);
+  document.getElementById("bs-cash-usd").textContent = fmtL(usdHnl);
+  document.getElementById("bs-loans-ok").textContent = fmtL(okLoans);
+  document.getElementById("bs-loans-bad").textContent = fmtL(badLoans);
+  document.getElementById("bs-eventual").textContent = fmtL(evVal);
+  document.getElementById("bs-prov").textContent = fmtL(-db.provisions);
+  document.getElementById("bs-fixed").textContent = fmtL(db.fixedAssets);
+
+  document.getElementById("bs-dep-liq").textContent = fmtL(depLiq);
+  document.getElementById("bs-dep-cdp").textContent = fmtL(cdpVal);
+  document.getElementById("bs-rediscount").textContent = fmtL(db.rediscount);
+  document.getElementById("bs-tot-liab").textContent = fmtL(totLiab);
+  document.getElementById("bs-cap").textContent = fmtL(db.paidCap);
+  document.getElementById("bs-ret").textContent = fmtL(db.retained);
+  document.getElementById("bs-eq").textContent = fmtL(eq);
+  document.getElementById("bs-tot-lp").textContent = fmtL(totLiab + eq);
+
+  document.getElementById("st-meta").textContent = `Clientes: ${db.clients.toLocaleString()} | Empleados: ${db.branches * 25}`;
+  document.getElementById("st-msg").textContent = encaje < 15
+    ? "⚠️ ALERTA: Encaje legal bajo el 15% — Capta CDP o solicita redescuento."
+    : "SISTEMA ACTIVO — Supervisión Prudencial Normal";
+
+  if (document.getElementById("t-graficos").classList.contains("active")) drawGraphs();
+}
+
+function drawGraphs() {
+  const styles = getComputedStyle(document.body);
+  const bg = styles.getPropertyValue("--crt-bg").trim();
+  const fg = styles.getPropertyValue("--crt-fg").trim();
+  const grid = styles.getPropertyValue("--crt-grid").trim();
+  const pos = styles.getPropertyValue("--pos").trim();
+  const neg = styles.getPropertyValue("--neg").trim();
+  const warn = styles.getPropertyValue("--warn").trim();
+
+  plotSeries("cv-main", db.hist.labels, [
+    { data: db.hist.eq, color: fg },
+    { data: db.hist.loans, color: "#00aaff" },
+    { data: db.hist.dep, color: warn }
+  ], "M", bg, fg, grid);
+
+  plotSeries("cv-rates", db.hist.labels, [
+    { data: db.hist.act, color: neg },
+    { data: db.hist.cdp, color: pos },
+    { data: db.hist.tpm, color: fg }
+  ], "%", bg, fg, grid);
+}
+
+function plotSeries(canvasId, labels, series, unit, bg, fg, grid) {
+  const cv = document.getElementById(canvasId);
+  const ctx = cv.getContext("2d");
+  const w = cv.width, h = cv.height;
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = grid;
+  ctx.lineWidth = 1;
+  for (let x = 55; x < w; x += 60) {
+    ctx.beginPath(); ctx.moveTo(x, 10); ctx.lineTo(x, h - 22); ctx.stroke();
+  }
+  for (let y = 15; y < h - 20; y += 30) {
+    ctx.beginPath(); ctx.moveTo(55, y); ctx.lineTo(w - 10, y); ctx.stroke();
+  }
+
+  let all = [];
+  series.forEach(s => all.push(...s.data));
+  const maxV = Math.max(10, Math.ceil(Math.max(...all) * 1.15));
+  const minV = Math.min(0, Math.floor(Math.min(...all)));
+  const span = Math.max(1, maxV - minV);
+
+  ctx.fillStyle = fg;
+  ctx.font = "11px Courier New";
+  for (let i = 0; i <= 4; i++) {
+    const val = minV + (span * i / 4);
+    const yPos = (h - 24) - ((val - minV) / span) * (h - 38);
+    ctx.fillText(val.toFixed(0) + unit, 4, yPos + 4);
+  }
+
+  const stepX = (w - 75) / Math.max(1, labels.length - 1);
+  series.forEach(s => {
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    s.data.forEach((v, i) => {
+      const x = 60 + i * stepX;
+      const y = (h - 24) - ((v - minV) / span) * (h - 38);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  });
+
+  ctx.fillStyle = fg;
+  labels.forEach((lb, i) => {
+    if (labels.length <= 12 || i % 2 === 0) {
+      ctx.fillText(lb, 48 + i * stepX, h - 6);
+    }
+  });
+}
+
+function resetSim() {
+  db = initialState();
+  document.getElementById("ticker-log").innerHTML = "";
+  logEvent("TERMINAL BCH-98 PRO REINICIADA. CAPITAL INICIAL: L 150,000,000.", "pos");
+  refreshApps();
+  renderAll();
+}
+
+db = initialState();
+logEvent("TERMINAL BCH-98 PRO INICIADA — BANCA UNIVERSAL & MESA DE DIVISAS.", "pos");
+refreshApps();
+renderAll();
 </script>
 </body>
 </html>
