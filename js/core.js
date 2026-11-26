@@ -1,5 +1,5 @@
 
-const STORAGE_KEY = "bch98_pro_v50_save";
+const STORAGE_KEY = "aureo_bank_v6_save";
 
 const CARD_CATALOG = [
   {
@@ -290,23 +290,12 @@ function initialState() {
 }
 
 function saveGame() {
-  if (transactionActive || testMode || batchMode) return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  } catch (e) {}
+  if (transactionActive || testMode || batchMode || saveBlocked64) return;
+  try {db.schemaVersion="6.4";localStorage.setItem(STORAGE_KEY, JSON.stringify(db));storageStatus64("Partida guardada localmente");}
+  catch(e){storageStatus64("No se pudo guardar: "+e.message,true);}
 }
 
-function loadGame() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("bch98_pro_v40_save");
-    if (!raw) return null;
-    const p = JSON.parse(raw);
-    if (!p || typeof p.cashHnl !== "number") return null;
-    return p;
-  } catch (e) {
-    return null;
-  }
-}
+function loadGame(){return loadNative64();}
 
 function fmtL(n) {
   const s=n<0?"-":"";return s+"L "+Math.abs(money(n)).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1094,10 +1083,10 @@ function renderAll() {
 
   document.getElementById("st-meta").textContent = `Clientes: ${db.clients.toLocaleString()} | Accionistas: ${db.shareholders}`;
   document.getElementById("st-msg").textContent = db.locked
-    ? "🔒 BANCO INTERVENIDO POR CNBS — Operaciones suspendidas"
+    ? "🔒 BANCO INTERVENIDO (SIMULACIÓN) — Operaciones suspendidas"
     : (aud.diff !== 0
       ? `⚠️ AUDITORÍA: Diferencia contable de ${fmtL(aud.diff)}`
-      : (encaje < 15 ? "⚠️ CNBS: Encaje legal bajo el 15% obligatorio" : "SISTEMA ACTIVO — Supervisión CNBS y Auditoría Contable Activa"));
+      : (encaje < 15 ? "⚠️ Alerta simulada: liquidez bajo el umbral del 15%" : "SISTEMA ACTIVO — Supervisión simulada y auditoría contable activa"));
 
   // Bloqueo de controles operativos si el banco fue intervenido
   document.querySelectorAll(".op-btn").forEach(btn => {
@@ -1114,7 +1103,7 @@ function renderAll() {
   ensureCustomers();renderCustomers();renderCardOperations();
   renderCalendar();
   renderTrialBalance();
-  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();renderBankDashboard();renderCustomer360();renderCredit62();renderAdvancedCards63();renderCRM63();renderDigital63();
+  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();renderBankDashboard();renderCustomer360();renderCredit62();renderAdvancedCards63();renderCRM63();renderDigital63();renderAudit64();
   document.getElementById("bs-goodwill").textContent=fmtL(db.goodwill||0);document.getElementById("bs-bonds").textContent=fmtL(db.govBonds);document.getElementById("bs-ib-borrow").textContent=fmtL(db.interbankBorrowed);
   document.querySelectorAll(".op-btn").forEach(b=>{if(db.locked)b.disabled=true;});
   saveGame();
@@ -1195,7 +1184,8 @@ function plotSeries(canvasId, labels, series, unit, bg, fg, grid) {
 }
 
 function resetSim() {
-  if(!confirm("¿Iniciar nueva partida? La copia de v4 se conserva."))return;
+  if(!confirm("¿Iniciar nueva partida? Se conserva un respaldo de la partida activa y las copias anteriores."))return;
+  if(!backupActive64())return;saveBlocked64=false;
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
   db = initialState();initAdvanced();initTreasury();initRivals();initHR();initRegulation();
   document.getElementById("rng-act-rate").value = db.actRate;
@@ -1204,7 +1194,7 @@ function resetSim() {
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("NUEVA PARTIDA Áureo Bank V6.3 INICIADA — BALANCE CUADRADO.", "pos");
+  logEvent("NUEVA PARTIDA Áureo Bank V6.4 INICIADA — BALANCE CUADRADO.", "pos");
   generateAppsList();
   renderAll();
 }
@@ -1300,7 +1290,7 @@ function disburse62(id){approveApp(id,true)}
 issueCard63=wrapOperation(issueCard63,"Emisión tarjeta");cardPurchase63=wrapOperation(cardPurchase63,"Consumo moneda / cuotas");changeCard63=wrapOperation(changeCard63,"Cambio contractual tarjeta");cancelCard63=wrapOperation(cancelCard63,"Cancelación tarjeta");addCard63=wrapOperation(addCard63,"Tarjeta adicional");crmAssign63=wrapOperation(crmAssign63,"Asignación CRM");crmLog63=wrapOperation(crmLog63,"Actividad CRM");crmGoal63=wrapOperation(crmGoal63,"Metas CRM");refreshOpportunities63=wrapOperation(refreshOpportunities63,"Evaluación oportunidades");decideOpp63=wrapOperation(decideOpp63,"Decisión oportunidad");deposit63=wrapOperation(deposit63,"Depósito individual");withdraw63=wrapOperation(withdraw63,"Retiro individual");transfer63=wrapOperation(transfer63,"Transferencia individual");payFromAccount63=wrapOperation(payFromAccount63,"Pago desde cuenta");requestIncrease63=wrapOperation(requestIncrease63,"Solicitud de aumento");
 const saved = loadGame();
 if (saved) {
-  db = Object.assign(initialState(), saved);initAdvanced();migrateCents();
+  db = saved;initAdvanced();
   db.refreshesLeft=0;
   if(db.interbankLoans>0&&!db.contracts.length)db.contracts.push({amount:db.interbankLoans,rate:0.09,qLeft:2,bank:"Contrato migrado"});
   document.getElementById("rng-act-rate").value = db.actRate;
@@ -1311,7 +1301,8 @@ if (saved) {
   logEvent(`Partida restaurada (T${db.q}-${db.yr}).`, "pos");
 } else {
   db = initialState();
-  logEvent("Áureo Bank V6.3 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  logEvent("Áureo Bank V6.4 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  if(saveBlocked64)logEvent("Partida anterior no válida: guardado automático suspendido. Consulta Configuración.","neg");
 }
 
 if (!saved) {

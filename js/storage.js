@@ -13,11 +13,11 @@ function validateSave(p){
  if(!p.pl||!p.hist||!Object.keys(base.pl).every(k=>Number.isFinite(p.pl[k]))||!Object.keys(base.hist).every(k=>Array.isArray(p.hist[k])))throw Error("Historial inválido");
  const old=db;try{db=p;validateAccounts63();const audit=getAuditImbalance();if(audit.diff!==0||!Number.isFinite(audit.totAssets))throw Error("Balance no cuadra");}finally{db=old;}return true;
 }
-function applyPortableSave(p){validateSave(p);const old=db;try{db=p;initTreasury();initRivals();initHR();initRegulation();ensureCustomers();renderAll();}catch(e){db=old;renderAll();throw e;}}
+function applyPortableSave(p){const next=migrateNative64(p),old=db,blocked=saveBlocked64;if(!testMode&&!backupActive64())throw Error("No se pudo respaldar la partida activa");try{db=next;saveBlocked64=false;initTreasury();initRivals();initHR();initRegulation();ensureCustomers();renderAll();}catch(e){db=old;saveBlocked64=blocked;renderAll();throw e;}}
 function saveSlot(n){if(![1,2,3].includes(n))return;try{localStorage.setItem("bch98_slot_"+n,JSON.stringify(db));logEvent("Guardado en espacio "+n,"pos");}catch(e){logEvent("No se pudo guardar: "+e.message,"neg");}}
 function loadSlot(n){if(![1,2,3].includes(n))return;try{const raw=localStorage.getItem("bch98_slot_"+n);if(!raw)throw Error("Espacio vacío");if(!confirm("¿Reemplazar partida activa por espacio "+n+"?"))return;applyPortableSave(JSON.parse(raw));}catch(e){logEvent("Carga rechazada: "+e.message,"neg");}}
-function exportGame(){const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="bch98-"+db.calendarDate+".json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-async function importGame(input){try{const f=input.files?.[0];if(!f)return;if(f.size>30*1024*1024)throw Error("Archivo demasiado grande");const p=JSON.parse(await f.text());validateSave(p);if(confirm("¿Reemplazar partida actual por el archivo?"))applyPortableSave(p);}catch(e){logEvent("Importación rechazada: "+e.message,"neg");}finally{input.value="";}}
+function exportGame(){const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="aureo-bank-"+currentCalendar().toISOString().slice(0,10)+".json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+async function importGame(input){try{const f=input.files?.[0];if(!f)return;if(f.size>30*1024*1024)throw Error("Archivo demasiado grande");const p=JSON.parse(await f.text());migrateNative64(p);if(confirm("¿Reemplazar partida actual por el archivo?"))applyPortableSave(p);}catch(e){logEvent("Importación rechazada: "+e.message,"neg");}finally{input.value="";}}
 function runFullTestSuite(){
  const original=db,oldRandom=Math.random;const results=[];let seed=42;const check=(name,ok)=>results.push({name,ok:!!ok});const audit=()=>getAuditImbalance().diff===0;
  testMode=true;try{Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};db=initialState();initTreasury();initRivals();initHR();initRegulation();generateAppsList();db.calendarDate="2026-01-01";
@@ -35,7 +35,7 @@ function runFullTestSuite(){
  }catch(e){results.push({name:"Excepción: "+e.message,ok:false});}finally{db=original;Math.random=oldRandom;testMode=false;batchMode=false;renderAll();}
  return results;
 }
-function showFullTests(){const e=document.getElementById("test-results");const r=[...runFullTestSuite(),...runAdvancedTests(),...runCredit62Tests(),...runDigital63Tests(),...runDOMChecks()];e.innerHTML="<p><b>"+r.filter(x=>x.ok).length+"/"+r.length+" aprobadas</b></p>"+r.map(x=>"<p>"+(x.ok?"✓ ":"✗ ")+safeHtml(x.name)+"</p>").join("");}
+function showFullTests(){showTests64();}
 
 function initAdvanced(){db.goodwill??=0;db.mergers??=[];db.scenarios??=[];}
 function migrateCents(){const old=Math.round(db.usdBalance*db.fxRate),now=money(db.usdBalance*db.fxRate);if(!db.centsVersion&&old!==now&&toCents(getAuditImbalance().diff)===toCents(now-old)){postPL(money(now-old),"fx","Migración de valuación USD a centavos");}db.centsVersion=1;}
