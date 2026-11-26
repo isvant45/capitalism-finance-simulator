@@ -235,7 +235,7 @@ function initialState() {
     cdRate: 7.5,
     minScore: 580,
     branches: 3,
-    refreshesLeft: 0, cards: [], contracts: [], periods: [], ledger: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
+    refreshesLeft: 0, profiles: [], customerSeq: 1, cards: [], contracts: [], periods: [], ledger: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
     paidCap: 120000000,
     retained: 30000000,
     cashHnl: 284300000,
@@ -373,6 +373,7 @@ function getScoreDiscount(score) {
 }
 
 function generateAppsList() {
+  ensureCustomers();
   db.apps = [];
   const pool = PRODUCTS;
   const count = 6 + Math.min(5, db.branches);
@@ -392,11 +393,13 @@ function generateAppsList() {
     const scoreRiskFactor = score >= 750 ? 0.55 : (score >= 680 ? 0.85 : (score < 600 ? 1.55 : 1.0));
     const defProb = Math.min(0.45, Math.max(0.01, +(prod.baseDef * scoreRiskFactor).toFixed(3)));
 
-    const client = CLIENT_NAMES[Math.floor(Math.random() * CLIENT_NAMES.length)] + ` #${10 + Math.floor(Math.random() * 89)}`;
+    const client = CLIENT_NAMES[Math.floor(Math.random() * CLIENT_NAMES.length)] + " #"+db.customerSeq;
+    const profile=createProfile(client,prod.seg,income,score);
 
     db.apps.push({
       id: Date.now() + Math.random(),
       client,
+      customerId:profile.id,
       income,
       seg: prod.seg,
       label: prod.label,
@@ -429,15 +432,17 @@ function approveApp(id) {
   const idx = db.apps.findIndex(a => a.id === id);
   if (idx === -1) return;
   const a = db.apps[idx];
+  ensureCustomers();const profile=customerFor(a);
   const prod=PRODUCTS.find(p=>p.label===a.label) || CARD_CATALOG.find(p=>p.cardTier===a.cardTier&&p.seg===a.seg);
   if (a.score<Math.max(db.minScore,prod?.minScore ?? tierFloor(a.cardTier)) || a.income<(prod?.minInc||0)) {logEvent("Solicitud no cumple ingreso mínimo o score simulado.","warn");return;}
   if(a.cardTier && a.label.includes("Tarjeta")){
     const limit=Math.min(a.amt,prod?.maxAmt??a.amt,Math.round(a.income*4));
     if(limit<=0||limit<(prod?.minAmt??0)){logEvent("Capacidad insuficiente para el límite mínimo de esta categoría. Considera una tarjeta inferior.","warn");return;}
-    db.cards.push({id:a.id,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,brand:prod?.brand||"",reward:prod?.reward||"",annualFee:prod?.fee||0,status:"Activa"});
+    db.cards.push({id:a.id,customerId:a.customerId,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,brand:prod?.brand||"",reward:prod?.reward||"",annualFee:prod?.fee||0,status:"Activa"});
     db.appHistory.push({...a,status:"Línea aprobada"});
     db.apps.splice(idx,1);logEvent("Tarjeta emitida sin desembolso: "+fmtL(limit),"pos");renderAll();return;
   }
+  if(profile && (customerDebtPayment(profile)+a.amt/Math.max(1,a.q*3)+a.amt*a.rate/1200)>profile.income*.45){logEvent("Capacidad de pago insuficiente (45% simulado).","warn");return;}
   if (db.cashHnl < a.amt) {
     logEvent(`Caja HNL insuficiente para desembolsar ${fmtL(a.amt)} a ${a.client}.`, "neg");
     return;
@@ -450,6 +455,7 @@ function approveApp(id) {
 
   db.loans.push({
     id: a.id,
+    customerId:a.customerId,seg:a.seg,income:a.income,monthsLeft:a.q*3,
     client: a.client,
     label: a.label,
     score: a.score,
@@ -780,42 +786,6 @@ function nextQuarter() {
   }
 
   for(let i=db.contracts.length-1;i>=0;i--){const c=db.contracts[i];if(--c.qLeft<=0){db.cashHnl+=c.amount;db.interbankLoans-=c.amount;db.contracts.splice(i,1);logEvent("Vencimiento interbancario "+fmtL(c.amount),"pos");}}
-  simulateCards();
-  // 3. Cobro de préstamos, mora y provisiones
-  for (let i = db.loans.length - 1; i >= 0; i--) {
-    const l = db.loans[i];
-    if (l.status === "Vigente") {
-      if (Math.random() < l.defProb / 4) {
-        l.status = "Mora";
-        const targetProv = Math.round(l.bal * 0.30);
-        const addProv = Math.max(0, targetProv - (l.provAllocated || 0));
-        l.provAllocated = (l.provAllocated || 0) + addProv;
-        db.provisions += addProv;
-        postPL(-addProv, "prov", `Provisión mora ${l.client}`);
-        logEvent(`MORA: ${l.client} (${l.label}) en mora por ${fmtL(l.bal)}.`, "neg");
-        continue;
-      }
-      const qInt = Math.round(l.bal * (l.rate / 100 / 4));
-      const qPrin = Math.min(l.bal, Math.round(l.bal / l.qLeft));
-      db.cashHnl += (qInt + qPrin);
-      l.bal -= qPrin;
-      l.qLeft -= 1;
-      postPL(qInt, "loans", `Cobro intereses ${l.client}`);
-
-      if (l.qLeft <= 0 || l.bal === 0) {
-        db.loans.splice(i, 1);
-      }
-    } else {
-      const targetProv = Math.min(l.bal, Math.round(l.bal * 0.55));
-      const addProv = Math.max(0, targetProv - (l.provAllocated || 0));
-      if (addProv > 0) {
-        l.provAllocated += addProv;
-        db.provisions += addProv;
-        postPL(-addProv, "prov", `Ajuste provisión mora ${l.client}`);
-      }
-    }
-  }
-
   // 4. Comisiones por servicios financieros
   const svcFee = Math.round(db.clients * 40);
   db.cashHnl += svcFee;
@@ -961,7 +931,7 @@ function renderTables() {
           <td class="num mono">${l.rate.toFixed(2)}%</td>
           <td class="num mono">${l.qLeft}</td>
           <td class="${bad ? 'neg' : 'pos'}"><b>${l.status}</b></td>
-          <td>${bad ? `<button class="op-btn" onclick="seizeOrRecover(${l.id})" style="padding:2px 6px;">Adjudicar / Cobrar</button>` : "-"}</td>
+          <td>${bad ? `<button class="op-btn" onclick="seizeOrRecover(${l.id})">Adjudicar / Cobrar</button> <button class="op-btn" onclick="refinanceCredit(${l.id})">Refinanciar</button>` : `<button class="op-btn" onclick="markCreditArrears(${l.id})">Mora simulada</button>`} <button class="op-btn" onclick="settleCredit(${l.id})">Pago total simulado</button></td>
         </tr>
       `;
     });
@@ -1145,6 +1115,7 @@ function renderAll() {
   if (document.getElementById("t-graficos").classList.contains("active")) drawGraphs();
   renderV5();
   renderAccountLedger();
+  ensureCustomers();renderCustomers();renderCardOperations();
   renderCalendar();
   renderTrialBalance();
   saveGame();
@@ -1292,13 +1263,15 @@ function renderCalendar(){
 function advanceCalendarDays(days){
  if(db.locked||!Number.isInteger(days)||days<1||days>366)return;
  for(let i=0;i<days&&!db.locked;i++){
-   const d=currentCalendar();d.setUTCDate(d.getUTCDate()+1);
+   const d=currentCalendar();const oldMonth=d.getUTCMonth();d.setUTCDate(d.getUTCDate()+1);
+   if(d.getUTCMonth()!==oldMonth){const key=d.toISOString().slice(0,7);monthlyBankCycle(key);if(db.lastMonthly!==key)break;}
    const y=d.getUTCFullYear(),q=Math.floor(d.getUTCMonth()/3)+1;
    if(q!==db.q||y!==db.yr){const prev=db.q+"-"+db.yr;nextQuarter();if(prev===db.q+"-"+db.yr)break;}
    db.calendarDate=d.toISOString().slice(0,10);
  }
  renderAll();
 }
+function closeCalendarQuarter(){const d=currentCalendar(),next=new Date(Date.UTC(db.yr,db.q*3,1));advanceCalendarDays(Math.round((next-d)/86400000));}
 function toggleAutoTime(){if(autoClock){clearInterval(autoClock);autoClock=null;}else if(!db.locked){autoClock=setInterval(()=>advanceCalendarDays(1),1000);}renderCalendar();}
 function chooseDivision(seg){
  if(!db.locked){document.getElementById("sel-focus").value=seg;changeFocus();}
@@ -1315,6 +1288,8 @@ function renderTrialBalance(){
  const total=rows.reduce((s,r)=>s+r.saldo,0);
  el.innerHTML="<p>Saldo inicial reconstruido desde los movimientos registrados en v5.0; los períodos anteriores a esa versión no se reconstruyen individualmente.</p><table><thead><tr><th>Cuenta</th><th>Saldo inicial neto</th><th>Mov. Debe</th><th>Mov. Haber</th><th>Saldo deudor</th><th>Saldo acreedor</th></tr></thead><tbody>"+rows.map(r=>"<tr><td>"+r.name+"</td><td>"+fmtL(r.opening)+"</td><td>"+fmtL(r.deb)+"</td><td>"+fmtL(r.cred)+"</td><td>"+fmtL(Math.max(0,r.saldo))+"</td><td>"+fmtL(Math.max(0,-r.saldo))+"</td></tr>").join("")+"</tbody></table><p><strong>Diferencia de saldos: "+fmtL(total)+"</strong></p>";
 }
+const monthlyBankCycle=wrapOperation(function(key){if(db.lastMonthly===key)return;creditMonthly();cardsMonthly();db.lastMonthly=key;for(const p of db.profiles)p.creditAgeMonths++;},"Ciclo mensual crédito y tarjetas");
+markCreditArrears=wrapOperation(markCreditArrears,"Mora");refinanceCredit=wrapOperation(refinanceCredit,"Refinanciamiento");settleCredit=wrapOperation(settleCredit,"Cancelación crédito");cardSpend=wrapOperation(cardSpend,"Consumo tarjeta");cardPay=wrapOperation(cardPay,"Pago tarjeta");cardBlock=wrapOperation(cardBlock,"Bloqueo tarjeta");
 const saved = loadGame();
 if (saved) {
   db = Object.assign(initialState(), saved);

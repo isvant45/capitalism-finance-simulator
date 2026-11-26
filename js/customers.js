@@ -1,0 +1,12 @@
+/* Perfiles persistentes; buró ficticio, sin acceso a Equifax. */
+function createProfile(name,seg,income,score){
+ db.profiles ||= [];db.customerSeq ||= 1;
+ const p={id:"CLI-"+db.customerSeq++,name,seg,income,score,tenureMonths:24+Math.floor(Math.random()*48),creditAgeMonths:36,onTimePayments:0,arrearsCount:0,history:[{date:db.calendarDate||db.yr+"-01-01",score,reason:"Perfil simulado"}]};db.profiles.push(p);return p;
+}
+function ensureCustomers(){db.profiles ||= [];db.customerSeq ||= 1;for(const x of [...db.apps,...db.loans,...db.cards])if(!x.customerId){const p=db.profiles.find(p=>p.name===x.client)||createProfile(x.client,x.seg||"PERSONAS",x.income||50000,x.score||650);x.customerId=p.id;}}
+function customerFor(x){return db.profiles.find(p=>p.id===x.customerId)}
+function updateCustomerScore(x,delta,reason){const p=customerFor(x);if(!p)return;p.score=Math.max(450,Math.min(850,p.score+delta));if(delta>0)p.onTimePayments++;if(delta<0)p.arrearsCount++;p.history.push({date:db.calendarDate||db.yr+"-01-01",score:p.score,reason});x.score=p.score;}
+function customerDebtPayment(p){return db.loans.filter(l=>l.customerId===p.id).reduce((s,l)=>s+l.bal/Math.max(1,l.monthsLeft||l.qLeft*3)+l.bal*l.rate/1200,0)+db.cards.filter(c=>c.customerId===p.id).reduce((s,c)=>s+c.bal*.05,0);}
+function safeHtml(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function chooseCustomer(id){db.selectedCustomerId=id;renderCustomers();saveGame()}
+function renderCustomers(){const e=document.getElementById("customer-dossier");if(!e)return;const p=db.profiles.find(p=>p.id===db.selectedCustomerId)||db.profiles[0];if(!p){e.textContent="Sin perfiles";return;}e.innerHTML='<label>Cliente <select onchange="chooseCustomer(this.value)">'+db.profiles.map(c=>'<option value="'+safeHtml(c.id)+'" '+(c.id===p.id?'selected':'')+'>'+safeHtml(c.name)+' · '+safeHtml(c.seg)+'</option>').join("")+'</select></label><p><b>'+safeHtml(p.name)+'</b> · '+p.score+' puntos · Ingreso '+fmtL(p.income)+'</p><p>Antigüedad laboral: '+p.tenureMonths+' meses · Historial: '+p.creditAgeMonths+' meses</p><p>Pagos puntuales: '+p.onTimePayments+' · Atrasos: '+p.arrearsCount+' · Cuota estimada: '+fmtL(customerDebtPayment(p))+'</p><p>Solicitudes históricas: '+db.appHistory.filter(a=>a.customerId===p.id).length+'</p>'+p.history.slice(-8).reverse().map(x=>'<p>'+safeHtml(x.date)+' · '+x.score+' · '+safeHtml(x.reason)+'</p>').join("")}

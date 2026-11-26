@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BCH-98 PRO v5.1 — modular — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
+<title>BCH-98 PRO v5.2 — modular — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
   <div class="title-bar">
-    <div>🏛️ BCH-98 PRO v5.1 — modular — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
+    <div>🏛️ BCH-98 PRO v5.2 — modular — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
     <div class="title-controls">
       <button onclick="setTheme('light')">Claro</button><button onclick="setTheme('dark')">Oscuro</button><button onclick="setTheme('retro')">Retro</button>
     </div>
@@ -65,8 +65,8 @@
   </div>
 
   <!-- ACCIONES GLOBALES -->
-  <div class="calendar-bar"><strong id="calendar-date"></strong><button class="op-btn" onclick="advanceCalendarDays(1)">+1 Día</button><button class="op-btn" onclick="advanceCalendarDays(7)">+1 Sem</button><button class="op-btn" onclick="advanceCalendarDays(30)">+30 Días</button><button class="op-btn" onclick="advanceCalendarDays(90)">+90 Días</button><button id="btn-clock" class="op-btn" onclick="toggleAutoTime()">Reanudar</button><small>Liquidaciones financieras al cierre del trimestre.</small></div><div id="action-toolbar" style="padding: 6px 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; border-bottom: 1px solid var(--win-dark);">
-    <button class="btn-go op-btn" onclick="nextQuarter()">⏩ CERRAR TRIMESTRE (CNBS &amp; Cierre)</button>
+  <div class="calendar-bar"><strong id="calendar-date"></strong><button class="op-btn" onclick="advanceCalendarDays(1)">+1 Día</button><button class="op-btn" onclick="advanceCalendarDays(7)">+1 Sem</button><button class="op-btn" onclick="advanceCalendarDays(30)">+30 Días</button><button class="op-btn" onclick="advanceCalendarDays(90)">+90 Días</button><button id="btn-clock" class="op-btn" onclick="toggleAutoTime()">Reanudar</button><small>Créditos y tarjetas: cierre mensual. Captación y tesorería: cierre trimestral.</small></div><div id="action-toolbar" style="padding: 6px 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; border-bottom: 1px solid var(--win-dark);">
+    <button class="btn-go op-btn" onclick="closeCalendarQuarter()">⏩ CERRAR TRIMESTRE (CNBS &amp; Cierre)</button>
     <button class="op-btn" onclick="approvePrimeClients()">⭐ Aprobar Score simulado ≥ 720</button>
     <button class="op-btn" onclick="requestRediscount()">🏛️ Redescuento BCH (+L 20M)</button>
     <button class="op-btn" onclick="repayRediscount()">💳 Pagar Redescuento (-L 20M)</button>
@@ -150,7 +150,7 @@
       </div>
 
       <!-- TAB 1: CRÉDITO, TARJETAS Y EQUIFAX -->
-      <div class="tab-content win-outset active" id="t-credito">
+      <div class="tab-content win-outset active" id="t-credito"><details class="win-group" open><summary>Expediente individual · Buró simulado</summary><div id="customer-dossier"></div></details><details class="win-group" open><summary>Operaciones de tarjetas emitidas</summary><div id="card-operations" style="overflow:auto"></div></details>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
           <strong>Solicitudes en Comité (Score simulado · Descuento Tasa ≥720 · Clásica/Oro/Platinum/Black)</strong>
           <button class="op-btn" onclick="refreshApps()" id="btn-refresh-apps">🔄 Regenerar (<span id="lbl-ref-left">2</span>)</button>
@@ -379,6 +379,9 @@
 </div>
 
 <script src="js/accounting.js"></script>
+<script src="js/customers.js"></script>
+<script src="js/credit.js"></script>
+<script src="js/cards.js"></script>
 <script src="js/core.js"></script>
 </body>
 </html>
