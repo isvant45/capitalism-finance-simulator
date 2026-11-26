@@ -342,7 +342,7 @@ function openTab(id, el) {
   document.getElementById(id).classList.add("active");
   el.classList.add("active");
   if (id === "t-graficos") drawGraphs();
-  updateBankRoute(id);if(id==="t-customer360")renderCustomer360();
+  updateBankRoute(id);if(id==="t-create-client"||id==="t-customer360"){if(autoClock){clearInterval(autoClock);autoClock=null;renderCalendar();}if(id==="t-customer360")renderCustomer360();}
 }
 
 function changeFocus() {
@@ -438,6 +438,7 @@ function approveApp(id) {
   ensureCustomers();const profile=customerFor(a);
   if(profile){a.score=profile.score;a.income=profile.income;if(profile.seg!==a.seg){logEvent("Segmento modificado; crea una solicitud nueva.","warn");return;}}
   const prod=PRODUCTS.find(p=>p.label===a.label) || CARD_CATALOG.find(p=>p.cardTier===a.cardTier&&p.seg===a.seg);
+  if(profile?.manual&&prod)a.rate=Math.max(5.5,money((prod.apr??db.actRate+prod.rateAdj)+getScoreDiscount(profile.score)));
   if (a.score<Math.max(db.minScore,prod?.minScore ?? tierFloor(a.cardTier)) || a.income<(prod?.minInc||0)) {logEvent("Solicitud no cumple ingreso mínimo o score simulado.","warn");return;}
   if(a.cardTier && a.label.includes("Tarjeta")){
     const limit=Math.min(a.amt,prod?.maxAmt??a.amt,Math.round(a.income*4));
@@ -1228,7 +1229,7 @@ function wrapOperation(fn,name){return function(...args){
  if(getAuditImbalance().diff!==0){logEvent("Operación bloqueada: partida con descuadre previo.","neg");return;}
  const prev=JSON.parse(JSON.stringify(db)),before=balanceAccounts();transactionActive=true;
  try{fn(...args);normalizeMoney();const diff=getAuditImbalance().diff;if(!Number.isFinite(diff)||diff!==0)throw Error("Diferencia "+fmtL(diff));const after=balanceAccounts();const lines=Object.keys(after).map(account=>({account,delta:(toCents(after[account])-toCents(before[account]))/100})).filter(l=>l.delta!==0).map(l=>({account:l.account,debit:Math.max(0,l.delta),credit:Math.max(0,-l.delta)}));if(lines.reduce((s,l)=>s+toCents(l.debit)-toCents(l.credit),0)!==0)throw Error("Asiento no cuadra en centavos");if(lines.length)db.ledger.push({id:db.ledger.length+1,period:"T"+prev.q+"-"+prev.yr,concept:name,lines});}
- catch(e){db=prev;logEvent("Operación revertida por auditoría: "+e.message,"neg");}
+ catch(e){db=prev;logEvent("Operación revertida por auditoría: "+e.message,"neg");if(typeof show360Notice==="function")show360Notice(e.message);}
  finally{transactionActive=false;renderAll();}
 }}
 approveApp=wrapOperation(approveApp,"Aprobación");rejectApp=wrapOperation(rejectApp,"Rechazo");approvePrimeClients=wrapOperation(approvePrimeClients,"Comité prime");seizeOrRecover=wrapOperation(seizeOrRecover,"Recuperación");sellEventual=wrapOperation(sellEventual,"Venta activo");attractDeposits=wrapOperation(attractDeposits,"Captación");processRemittances=wrapOperation(processRemittances,"Remesas");tradeFX=wrapOperation(tradeFX,"Divisas");lendInterbank=wrapOperation(lendInterbank,"Interbancario");mergeWeakCompetitor=wrapOperation(mergeWeakCompetitor,"Compra parcial cartera");issueNewShares=wrapOperation(issueNewShares,"Capital");requestRediscount=wrapOperation(requestRediscount,"Redescuento");repayRediscount=wrapOperation(repayRediscount,"Pago redescuento");openBranch=wrapOperation(openBranch,"Apertura agencia");closeBranch=wrapOperation(closeBranch,"Cierre agencia");nextQuarter=wrapOperation(nextQuarter,"Cierre trimestre");
