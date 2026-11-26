@@ -1,0 +1,2 @@
+/* Interfaz de la entrega 4. */
+function renderFinalUI(){renderRegulation();renderHR();const e=document.getElementById("executive-metrics");if(e){const a=getAuditImbalance(),annual=db.periods.filter(p=>p.yr===db.yr).reduce((s,p)=>s+p.net,0)+db.pl.net;e.innerHTML="<p>Activos "+fmtL(a.totAssets)+" · Pasivos "+fmtL(a.totLiab)+" · Patrimonio "+fmtL(a.eq)+"</p><p>Resultado acumulado anual: "+fmtL(annual)+" · ROA acumulado "+(annual/Math.max(1,a.totAssets)*100).toFixed(2)+"% · ROE acumulado "+(annual/Math.max(1,a.eq)*100).toFixed(2)+"%</p>";} }
