@@ -481,7 +481,7 @@
 
     <!-- PANEL DERECHO: PESTAÑAS -->
     <div>
-      <div id="v5-panel" class="win-group" style="max-height:320px;overflow:auto"></div><details class="win-group"><summary>Registro contable por cuenta</summary><div id="account-ledger" style="max-height:250px;overflow:auto"></div></details><p>Juego educativo independiente. Entidades, scores, montos, tasas y umbrales son simulados; no son ofertas ni normas oficiales. Referencias de productos: <a href="https://www.ficohsa.hn/banca-personas/tarjetas-credito/disfruta-mas-visa-clasica">Ficohsa</a> · <a href="https://www.baccredomatic.com/es-hn/personas/tarjetas">BAC</a> · <a href="https://experienciapyme.banpais.hn/soluciones/tarjetas-comerciales">Banpaís</a> · <a href="https://www.cnbs.gob.hn/la-cnbs-responde/">CNBS</a>.</p><div class="tabs">
+      <details class="win-group"><summary>Catálogo de tarjetas Visa y Mastercard (simulado)</summary><div id="card-catalog" style="max-height:320px;overflow:auto"></div></details><div id="v5-panel" class="win-group" style="max-height:320px;overflow:auto"></div><details class="win-group"><summary>Registro contable por cuenta</summary><div id="account-ledger" style="max-height:250px;overflow:auto"></div></details><p>Juego educativo independiente. Entidades, scores, montos, tasas y umbrales son simulados; no son ofertas ni normas oficiales. Referencias de productos: <a href="https://www.ficohsa.hn/banca-personas/tarjetas-credito/disfruta-mas-visa-clasica">Ficohsa</a> · <a href="https://www.baccredomatic.com/es-hn/personas/tarjetas">BAC</a> · <a href="https://experienciapyme.banpais.hn/soluciones/tarjetas-comerciales">Banpaís</a> · <a href="https://www.cnbs.gob.hn/la-cnbs-responde/">CNBS</a>.</p><div class="tabs">
         <div class="tab-btn active" onclick="openTab('t-credito', this)">💳 Crédito, Tarjetas &amp; buró simulado (<span id="cnt-apps">0</span>)</div>
         <div class="tab-btn" onclick="openTab('t-captacion', this)">🏦 Captación, Remesas &amp; CDP</div>
         <div class="tab-btn" onclick="openTab('t-fx', this)">💱 Divisas &amp; Mercado Interbancario</div>
@@ -721,18 +721,213 @@
 <script>
 const STORAGE_KEY = "bch98_pro_v50_save";
 
+const CARD_CATALOG = [
+  {
+    "label": "Tarjeta Visa Clásica",
+    "cardTier": "Clásica",
+    "brand": "Visa",
+    "seg": "PERSONAS",
+    "minInc": 18000,
+    "minScore": 600,
+    "minAmt": 25000,
+    "maxAmt": 120000,
+    "apr": 36,
+    "fee": 650,
+    "reward": "Puntos comercio",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Visa Oro",
+    "cardTier": "Oro",
+    "brand": "Visa",
+    "seg": "PERSONAS",
+    "minInc": 35000,
+    "minScore": 650,
+    "minAmt": 100000,
+    "maxAmt": 350000,
+    "apr": 33.5,
+    "fee": 1400,
+    "reward": "Cashback / puntos",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Visa Platinum",
+    "cardTier": "Platinum",
+    "brand": "Visa",
+    "seg": "PERSONAS",
+    "minInc": 70000,
+    "minScore": 710,
+    "minAmt": 300000,
+    "maxAmt": 900000,
+    "apr": 30,
+    "fee": 2800,
+    "reward": "Millas / seguros",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Visa Signature",
+    "cardTier": "Signature",
+    "brand": "Visa",
+    "seg": "PRIVADA",
+    "minInc": 120000,
+    "minScore": 740,
+    "minAmt": 750000,
+    "maxAmt": 2200000,
+    "apr": 27.5,
+    "fee": 4500,
+    "reward": "Viajes / salas VIP",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Visa Infinite",
+    "cardTier": "Infinite",
+    "brand": "Visa",
+    "seg": "PRIVADA",
+    "minInc": 220000,
+    "minScore": 775,
+    "minAmt": 1500000,
+    "maxAmt": 5000000,
+    "apr": 25,
+    "fee": 7500,
+    "reward": "Concierge",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Mastercard Clásica",
+    "cardTier": "Clásica",
+    "brand": "Mastercard",
+    "seg": "PERSONAS",
+    "minInc": 18000,
+    "minScore": 600,
+    "minAmt": 25000,
+    "maxAmt": 120000,
+    "apr": 36,
+    "fee": 650,
+    "reward": "Puntos compras",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Mastercard Gold",
+    "cardTier": "Gold",
+    "brand": "Mastercard",
+    "seg": "PERSONAS",
+    "minInc": 35000,
+    "minScore": 650,
+    "minAmt": 100000,
+    "maxAmt": 350000,
+    "apr": 33.5,
+    "fee": 1400,
+    "reward": "Promociones",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Mastercard Platinum",
+    "cardTier": "Platinum",
+    "brand": "Mastercard",
+    "seg": "PERSONAS",
+    "minInc": 70000,
+    "minScore": 710,
+    "minAmt": 300000,
+    "maxAmt": 900000,
+    "apr": 30,
+    "fee": 2800,
+    "reward": "Seguros / puntos",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Mastercard Black",
+    "cardTier": "Black",
+    "brand": "Mastercard",
+    "seg": "PRIVADA",
+    "minInc": 180000,
+    "minScore": 760,
+    "minAmt": 1200000,
+    "maxAmt": 4500000,
+    "apr": 26,
+    "fee": 6500,
+    "reward": "Beneficios VIP",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Mastercard Empresarial PyME",
+    "cardTier": "Empresarial",
+    "brand": "Mastercard",
+    "seg": "PYME",
+    "minInc": 90000,
+    "minScore": 670,
+    "minAmt": 250000,
+    "maxAmt": 1800000,
+    "apr": 29,
+    "fee": 2200,
+    "reward": "Gastos operativos",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  },
+  {
+    "label": "Tarjeta Visa Corporativa",
+    "cardTier": "Corporativa",
+    "brand": "Visa",
+    "seg": "EMPRESARIAL",
+    "minInc": 300000,
+    "minScore": 730,
+    "minAmt": 1000000,
+    "maxAmt": 8000000,
+    "apr": 24.5,
+    "fee": 5000,
+    "reward": "Control corporativo",
+    "minQ": 4,
+    "maxQ": 12,
+    "rateAdj": 0,
+    "baseDef": 0.06,
+    "collateral": "Línea revolvente"
+  }
+];
 const PRODUCTS = [
-  { seg: "PERSONAS", label: "Tarjeta Clásica", cardTier: "Clásica", minInc: 18000, minAmt: 60000, maxAmt: 350000, minQ: 4, maxQ: 8, rateAdj: 9.5, baseDef: 0.11, collateral: "Línea Revolvente" },
-  { seg: "PERSONAS", label: "Tarjeta Oro", cardTier: "Oro", minInc: 38000, minAmt: 250000, maxAmt: 900000, minQ: 6, maxQ: 12, rateAdj: 7.5, baseDef: 0.08, collateral: "Línea Revolvente" },
-  { seg: "PERSONAS", label: "Tarjeta Platinum", cardTier: "Platinum", minInc: 75000, minAmt: 700000, maxAmt: 2200000, minQ: 8, maxQ: 16, rateAdj: 5.5, baseDef: 0.05, collateral: "Línea Revolvente" },
-  { seg: "PERSONAS", label: "Tarjeta Black", cardTier: "Black", minInc: 140000, minAmt: 1800000, maxAmt: 5500000, minQ: 8, maxQ: 20, rateAdj: 3.5, baseDef: 0.03, collateral: "Banca Privada / Ingreso Alto" },
   { seg: "PERSONAS", label: "Préstamo Vehicular", cardTier: null, minInc: 30000, minAmt: 650000, maxAmt: 3800000, minQ: 8, maxQ: 20, rateAdj: 1.0, baseDef: 0.055, collateral: "Vehículo (Prenda)" },
   { seg: "PERSONAS", label: "Crédito Hipotecario", cardTier: null, minInc: 55000, minAmt: 2500000, maxAmt: 16000000, minQ: 12, maxQ: 28, rateAdj: -1.0, baseDef: 0.04, collateral: "Bien Inmueble" },
   { seg: "PRIVADA", label: "Crédito con respaldo CDP", cardTier: null, minInc: 100000, minAmt: 1000000, maxAmt: 12000000, minQ: 4, maxQ: 12, rateAdj: -1, baseDef: 0.025, collateral: "Depósito pignorado simulado" },
-  { seg: "PRIVADA", label: "Tarjeta Visa Infinite", cardTier: "Black", minInc: 140000, minAmt: 180000, maxAmt: 800000, minQ: 8, maxQ: 20, rateAdj: 3, baseDef: 0.03, collateral: "Línea revolvente" },
   { seg: "PYME", label: "Capital de Trabajo PyME", cardTier: null, minInc: 90000, minAmt: 1200000, maxAmt: 8500000, minQ: 4, maxQ: 12, rateAdj: 1.5, baseDef: 0.085, collateral: "Inventarios / CxC" },
-  { seg: "PYME", label: "Tarjeta Empresarial / PyME", cardTier: "Oro", minInc: 80000, minAmt: 500000, maxAmt: 3000000, minQ: 4, maxQ: 10, rateAdj: 6.0, baseDef: 0.075, collateral: "RTN / Flujo Comercial" },
-  { seg: "EMPRESARIAL", label: "Financiamiento Corporativo", cardTier: "Black", minInc: 350000, minAmt: 12000000, maxAmt: 65000000, minQ: 8, maxQ: 24, rateAdj: -1.5, baseDef: 0.03, collateral: "Garantía Real / Flujo" }
+  { seg: "EMPRESARIAL", label: "Financiamiento Corporativo", cardTier: null, minInc: 350000, minAmt: 12000000, maxAmt: 65000000, minQ: 8, maxQ: 24, rateAdj: -1.5, baseDef: 0.03, collateral: "Garantía Real / Flujo" },
+  ...CARD_CATALOG
 ];
 
 const CLIENT_NAMES = [
@@ -971,11 +1166,11 @@ function generateAppsList() {
     if (score < db.minScore) continue;
 
     const income = Math.round((prod.minInc * (0.9 + Math.random() * 1.4)) / 1000) * 1000;
-    const amt = Math.round((prod.minAmt + Math.random() * (prod.maxAmt - prod.minAmt)) / 50000) * 50000;
+    const amt = Math.min(prod.maxAmt,Math.max(prod.minAmt,Math.round((prod.minAmt+Math.random()*(prod.maxAmt-prod.minAmt))/5000)*5000));
     const q = prod.minQ + Math.floor(Math.random() * (prod.maxQ - prod.minQ + 1));
 
     const scoreAdj = getScoreDiscount(score);
-    const rate = Math.max(5.5, +(db.actRate + prod.rateAdj + scoreAdj).toFixed(2));
+    const rate = Math.max(5.5, +((prod.apr ?? (db.actRate+prod.rateAdj)) + scoreAdj).toFixed(2));
 
     const scoreRiskFactor = score >= 750 ? 0.55 : (score >= 680 ? 0.85 : (score < 600 ? 1.55 : 1.0));
     const defProb = Math.min(0.45, Math.max(0.01, +(prod.baseDef * scoreRiskFactor).toFixed(3)));
@@ -1017,12 +1212,12 @@ function approveApp(id) {
   const idx = db.apps.findIndex(a => a.id === id);
   if (idx === -1) return;
   const a = db.apps[idx];
-  const prod=PRODUCTS.find(p=>p.label===a.label);
-  if (a.score<Math.max(db.minScore,tierFloor(a.cardTier)) || a.income<(prod?.minInc||0)) {logEvent("Solicitud no cumple ingreso mínimo o score simulado.","warn");return;}
+  const prod=PRODUCTS.find(p=>p.label===a.label) || CARD_CATALOG.find(p=>p.cardTier===a.cardTier&&p.seg===a.seg);
+  if (a.score<Math.max(db.minScore,prod?.minScore ?? tierFloor(a.cardTier)) || a.income<(prod?.minInc||0)) {logEvent("Solicitud no cumple ingreso mínimo o score simulado.","warn");return;}
   if(a.cardTier && a.label.includes("Tarjeta")){
-    const limit=Math.min(a.amt,Math.round(a.income*4));
-    if(limit<=0)return;
-    db.cards.push({id:a.id,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,status:"Activa"});
+    const limit=Math.min(a.amt,prod?.maxAmt??a.amt,Math.round(a.income*4));
+    if(limit<=0||limit<(prod?.minAmt??0)){logEvent("Capacidad insuficiente para el límite mínimo de esta categoría. Considera una tarjeta inferior.","warn");return;}
+    db.cards.push({id:a.id,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,brand:prod?.brand||"",reward:prod?.reward||"",annualFee:prod?.fee||0,status:"Activa"});
     db.appHistory.push({...a,status:"Línea aprobada"});
     db.apps.splice(idx,1);logEvent("Tarjeta emitida sin desembolso: "+fmtL(limit),"pos");renderAll();return;
   }
@@ -1840,6 +2035,7 @@ function simulateCards(){
   }
 }
 function renderV5(){
+  const catalog=document.getElementById("card-catalog");if(catalog)catalog.innerHTML="<table><tr><th>Producto</th><th>Segmento</th><th>Ingreso mín.</th><th>Score mín.</th><th>Límite simulado</th><th>Tasa base</th><th>Membresía referencial</th><th>Beneficio referencial</th></tr>"+CARD_CATALOG.map(p=>"<tr><td>"+p.label+"</td><td>"+p.seg+"</td><td>"+fmtL(p.minInc)+"</td><td>"+p.minScore+"</td><td>"+fmtL(p.minAmt)+" – "+fmtL(p.maxAmt)+"</td><td>"+p.apr.toFixed(2)+"%</td><td>"+fmtL(p.fee)+"</td><td>"+p.reward+"</td></tr>").join("")+"</table>";
   const el=document.getElementById("v5-panel");if(!el)return;
   const last=db.periods.at(-1), y=db.periods.filter(p=>p.yr===db.yr).reduce((n,p)=>n+p.net,0)+db.pl.net;
   const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
