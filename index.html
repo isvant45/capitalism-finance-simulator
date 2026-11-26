@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Áureo Bank | Digital Banking Simulator V6.5</title>
-<link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/digital-banking.css">
+<title>Áureo Bank | Digital Banking Simulator V6.6</title>
+<link rel="stylesheet" href="css/styles.css?v=6.6">
+<link rel="stylesheet" href="css/components.css?v=6.6">
+<link rel="stylesheet" href="css/digital-banking.css?v=6.6">
 </head>
 <body>
 
 <div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
-  <header class="title-bar"><div class="brand"><button class="nav-toggle" onclick="toggleBankNav()" aria-label="Abrir menú">☰</button><span class="brand-logo">A</span><div><b>ÁUREO BANK</b><small>Digital Banking · V6.5</small></div></div><div class="global-search"><label for="bank-search" class="sr-only">Buscar clientes o módulos</label><input id="bank-search" placeholder="Buscar clientes o módulos…" oninput="searchBank(this.value)" autocomplete="off"><div id="bank-search-results" hidden></div></div><div class="title-controls"><button onclick="toggleBankAlerts()">Actividad <span id="activity-count">0</span></button><button onclick="setTheme(document.body.classList.contains('dark-mode')?'light':'dark')" id="btn-theme">Modo oscuro</button><button onclick="selectModule('t-system')">Dirección general</button></div><div id="bank-alerts" hidden></div></header>
+  <header class="title-bar"><div class="brand"><button class="nav-toggle" onclick="toggleBankNav()" aria-label="Abrir menú">☰</button><span class="brand-logo">A</span><div><b>ÁUREO BANK</b><small>Digital Banking · V6.6</small></div></div><div class="global-search"><label for="bank-search" class="sr-only">Buscar clientes o módulos</label><input id="bank-search" placeholder="Buscar clientes o módulos…" oninput="searchBank(this.value)" autocomplete="off"><div id="bank-search-results" hidden></div></div><div class="title-controls"><button onclick="toggleBankAlerts()">Actividad <span id="activity-count">0</span></button><button onclick="setTheme(document.body.classList.contains('dark-mode')?'light':'dark')" id="btn-theme">Modo oscuro</button><button onclick="selectModule('t-system')">Dirección general</button></div><div id="bank-alerts" hidden></div></header>
   <!-- SUB-BARRA DE ENTORNO -->
   <div class="sub-bar">
     <div>
@@ -142,7 +142,7 @@
           </table>
         </div>
       </div>
-    </div><div id="v5-panel" class="win-group" style="max-height:320px;overflow:auto"></div><p>Juego educativo independiente. Entidades, scores, montos, tasas y umbrales son simulados; no son ofertas ni normas oficiales. Referencias de productos: <a href="https://www.ficohsa.hn/banca-personas/tarjetas-credito/disfruta-mas-visa-clasica">Ficohsa</a> · <a href="https://www.baccredomatic.com/es-hn/personas/tarjetas">BAC</a> · <a href="https://experienciapyme.banpais.hn/soluciones/tarjetas-comerciales">Banpaís</a> · <a href="https://www.cnbs.gob.hn/la-cnbs-responde/">CNBS</a>.</p></section><section class="tab-content" id="t-clients"><button class="btn-go" onclick="selectModule('t-create-client')">+ Nuevo cliente</button><details class="win-group" open><summary>Expediente individual · Buró simulado</summary><div id="customer-dossier"></div></details><div id="client-directory" class="win-group"></div></section><section class="tab-content" id="t-create-client"><div class="win-group"><p>Solo datos ficticios. Pausa el reloj mientras editas.</p><form onsubmit="submitNew360(event)"><div id="god-create65"></div><div id="create-client-fields"></div><button class="btn-go op-btn">Crear cliente</button></form></div></section><section class="tab-content" id="t-customer360"><div id="client-360-root"></div></section><section class="tab-content" id="t-credit-origin"><div id="credit-originator-root"></div></section><section class="tab-content" id="t-credit-committee"><div id="god-committee65"></div><div id="credit-committee-root"></div></section><section class="tab-content" id="t-loan-detail"><div id="loan-detail-root"></div></section><section class="tab-content" id="t-crm"><div id="crm-root63"></div></section><section class="tab-content" id="t-digital"><div id="digital-root63"></div></section><section class="tab-content" id="t-cards"><div id="cards-root63"></div><details class="win-group" open><summary>Operaciones de tarjetas emitidas</summary><div id="card-operations" style="overflow:auto"></div></details><details class="win-group"><summary>Catálogo de tarjetas Visa y Mastercard (simulado)</summary><div id="card-catalog" style="max-height:320px;overflow:auto"></div></details></section><div class="tab-content win-outset" id="t-credito">
+    </div><div id="v5-panel" class="win-group" style="max-height:320px;overflow:auto"></div><p>Juego educativo independiente. Entidades, scores, montos, tasas y umbrales son simulados; no son ofertas ni normas oficiales. Referencias de productos: <a href="https://www.ficohsa.hn/banca-personas/tarjetas-credito/disfruta-mas-visa-clasica">Ficohsa</a> · <a href="https://www.baccredomatic.com/es-hn/personas/tarjetas">BAC</a> · <a href="https://experienciapyme.banpais.hn/soluciones/tarjetas-comerciales">Banpaís</a> · <a href="https://www.cnbs.gob.hn/la-cnbs-responde/">CNBS</a>.</p></section><section class="tab-content" id="t-clients"><button class="btn-go" onclick="selectModule('t-create-client')">+ Nuevo cliente</button><details class="win-group" open><summary>Expediente individual · Buró simulado</summary><div id="customer-dossier"></div></details><div id="client-directory" class="win-group"></div></section><section class="tab-content" id="t-create-client"><div class="win-group"><p>Solo datos ficticios. Pausa el reloj mientras editas.</p><form onsubmit="submitNew360(event)"><div id="god-create65"></div><div id="create-client-fields"></div><button class="btn-go op-btn">Crear cliente</button></form></div></section><section class="tab-content" id="t-customer360"><div id="client-360-root"></div></section><section class="tab-content" id="t-credit-origin"><div id="god-origin66"></div><div id="credit-originator-root"></div></section><section class="tab-content" id="t-credit-committee"><div id="god-committee65"></div><div id="credit-committee-root"></div></section><section class="tab-content" id="t-loan-detail"><div id="loan-detail-root"></div></section><section class="tab-content" id="t-crm"><div id="crm-root63"></div></section><section class="tab-content" id="t-digital"><div id="digital-root63"></div></section><section class="tab-content" id="t-cards"><div id="god-cards66"></div><div id="cards-root63"></div><details class="win-group" open><summary>Operaciones de tarjetas emitidas</summary><div id="card-operations" style="overflow:auto"></div></details><details class="win-group"><summary>Catálogo de tarjetas Visa y Mastercard (simulado)</summary><div id="card-catalog" style="max-height:320px;overflow:auto"></div></details></section><div class="tab-content win-outset" id="t-credito">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
           <strong>Solicitudes en Comité (Score simulado · Descuento Tasa ≥720 · Clásica/Oro/Platinum/Black)</strong>
           <button class="op-btn" onclick="refreshApps()" id="btn-refresh-apps">🔄 Regenerar (<span id="lbl-ref-left">2</span>)</button>
@@ -371,27 +371,27 @@
   </div>
 </div>
 
-<script src="js/accounting.js"></script>
-<script src="js/customers.js"></script>
-<script src="js/credit.js"></script>
-<script src="js/cards.js"></script>
-<script src="js/treasury.js"></script>
-<script src="js/market.js"></script>
-<script src="js/competitors.js"></script>
-<script src="js/regulation.js"></script>
-<script src="js/hr.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/router.js"></script>
-<script src="js/customer360.js"></script>
-<script src="js/amortization.js"></script>
-<script src="js/creditCommittee.js"></script>
-<script src="js/creditUI.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/crm.js"></script>
-<script src="js/digitalBanking.js"></script>
-<script src="js/digitalUI.js"></script>
-<script src="js/tests.js"></script>
-<script src="js/sandbox65.js"></script>
-<script src="js/core.js"></script>
+<script src="js/accounting.js?v=6.6"></script>
+<script src="js/customers.js?v=6.6"></script>
+<script src="js/credit.js?v=6.6"></script>
+<script src="js/cards.js?v=6.6"></script>
+<script src="js/treasury.js?v=6.6"></script>
+<script src="js/market.js?v=6.6"></script>
+<script src="js/competitors.js?v=6.6"></script>
+<script src="js/regulation.js?v=6.6"></script>
+<script src="js/hr.js?v=6.6"></script>
+<script src="js/storage.js?v=6.6"></script>
+<script src="js/router.js?v=6.6"></script>
+<script src="js/customer360.js?v=6.6"></script>
+<script src="js/amortization.js?v=6.6"></script>
+<script src="js/creditCommittee.js?v=6.6"></script>
+<script src="js/creditUI.js?v=6.6"></script>
+<script src="js/ui.js?v=6.6"></script>
+<script src="js/crm.js?v=6.6"></script>
+<script src="js/digitalBanking.js?v=6.6"></script>
+<script src="js/digitalUI.js?v=6.6"></script>
+<script src="js/tests.js?v=6.6"></script>
+<script src="js/sandbox65.js?v=6.6"></script>
+<script src="js/core.js?v=6.6"></script>
 </body>
 </html>
