@@ -235,7 +235,7 @@ function initialState() {
     cdRate: 7.5,
     minScore: 580,
     branches: 3,
-    refreshesLeft: 0, govBonds:0, interbankBorrowed:0, remittances:[], treasurySeq:1, ibHistory:[], collaterals:[], marketSeq:1, deals:[], profiles: [], customerSeq: 1, cards: [], contracts: [], periods: [], ledger: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
+    refreshesLeft: 0, govBonds:0, goodwill:0, mergers:[], scenarios:[], interbankBorrowed:0, remittances:[], treasurySeq:1, ibHistory:[], collaterals:[], marketSeq:1, deals:[], profiles: [], customerSeq: 1, cards: [], contracts: [], periods: [], ledger: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
     paidCap: 120000000,
     retained: 30000000,
     cashHnl: 284300000,
@@ -304,8 +304,7 @@ function loadGame() {
 }
 
 function fmtL(n) {
-  const s = n < 0 ? "-" : "";
-  return s + "L " + Math.abs(Math.round(n)).toLocaleString("en-US");
+  const s=n<0?"-":"";return s+"L "+Math.abs(money(n)).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
 function fmtU(n) {
@@ -528,7 +527,7 @@ function sellEventual(idx) {
   if (db.locked) return;
   const item = db.eventualAssets[idx];
   if (!item) return;
-  const sale = item.auctionPrice ?? Math.round(item.bookVal * 0.92);
+  const sale = item.auctionPrice ?? money(item.bookVal * 0.92);
   const diff = sale - item.bookVal;
   db.cashHnl += sale;
   postPL(diff, "fees", `Liquidación activo eventual: ${item.title}`);
@@ -540,7 +539,7 @@ function sellEventual(idx) {
 
 function attractDeposits(type, amt) {
   if (db.locked) return;
-  if(!["SAVINGS","CHECKING","CDP"].includes(type)||!Number.isSafeInteger(amt)||amt<=0)return;
+  if(!["SAVINGS","CHECKING","CDP"].includes(type)||!isMoney(amt)||amt<=0)return;
   if (db.depQuotaLeft < amt) {
     logEvent(`Cupo comercial trimestral de captación agotado (${fmtL(db.depQuotaLeft)}).`, "warn");
     return;
@@ -592,8 +591,8 @@ function tradeFX(side, usdAmt) {
 
   if (side === "BUY") {
     const buyPrice = +(db.fxRate + spread).toFixed(4);
-    const acquisitionCost = Math.round(usdAmt * buyPrice);
-    const commPaid = Math.round(acquisitionCost * commRate);
+    const acquisitionCost = money(usdAmt * buyPrice);
+    const commPaid = money(acquisitionCost * commRate);
     const totalCashOut = acquisitionCost + commPaid;
 
     if (db.cashHnl < totalCashOut) {
@@ -602,7 +601,7 @@ function tradeFX(side, usdAmt) {
     }
 
     // Valor de referencia del ingreso en USD al tipo de cambio de referencia actual
-    const refBookValue = Math.round((db.usdBalance+usdAmt)*db.fxRate)-Math.round(db.usdBalance*db.fxRate);
+    const refBookValue = money((db.usdBalance+usdAmt)*db.fxRate)-money(db.usdBalance*db.fxRate);
     // Resultado real de la operación: diferencia vs referencia menos la comisión pagada
     const realFxResult = (refBookValue - acquisitionCost) - commPaid;
 
@@ -620,10 +619,10 @@ function tradeFX(side, usdAmt) {
       return;
     }
     const sellPrice = Math.max(1, +(db.fxRate - spread).toFixed(4));
-    const grossHnl = Math.round(usdAmt * sellPrice);
-    const commPaid = Math.round(grossHnl * commRate);
+    const grossHnl = money(usdAmt * sellPrice);
+    const commPaid = money(grossHnl * commRate);
     const netCashIn = grossHnl - commPaid;
-    const refBookValue = Math.round(db.usdBalance*db.fxRate)-Math.round((db.usdBalance-usdAmt)*db.fxRate);
+    const refBookValue = money(db.usdBalance*db.fxRate)-money((db.usdBalance-usdAmt)*db.fxRate);
     const realFxResult = netCashIn - refBookValue;
 
     db.usdBalance -= usdAmt;
@@ -961,9 +960,9 @@ function renderTables() {
     db.eventualAssets.forEach((ev, i) => {
       tbEv.innerHTML += `
         <tr>
-          <td>${ev.title}</td>
-          <td class="num mono">${fmtL(ev.bookVal)}</td>
-          <td><button class="op-btn" onclick="sellEventual(${i})" style="padding:2px 6px;">Vender</button></td>
+          <td>${safeHtml(ev.title)} · ${safeHtml(ev.highestBidder||"Sin puja")} · Ronda ${ev.auctionRound||0}/4</td>
+          <td class="num mono">${fmtL(ev.bookVal)} / Oferta ${fmtL(ev.auctionPrice||0)}</td>
+          <td><button class="op-btn" onclick="placeAuctionBid(${i})">Pujar</button> <button class="op-btn" onclick="sellEventual(${i})">Cerrar / venta directa</button></td>
         </tr>
       `;
     });
@@ -988,7 +987,7 @@ function renderTables() {
 
 function renderAll() {
   if(testMode||batchMode)return;
-  initTreasury();initRivals();initHR();initRegulation();
+  initTreasury();initRivals();initHR();initRegulation();initAdvanced();
   clampProvisions();
   recomputeNetIncome();
 
@@ -1098,7 +1097,7 @@ function renderAll() {
   renderCalendar();
   renderTrialBalance();
   renderTreasury();renderMarket();renderCompetitors();renderFinalUI();
-  document.getElementById("bs-bonds").textContent=fmtL(db.govBonds);document.getElementById("bs-ib-borrow").textContent=fmtL(db.interbankBorrowed);
+  document.getElementById("bs-goodwill").textContent=fmtL(db.goodwill||0);document.getElementById("bs-bonds").textContent=fmtL(db.govBonds);document.getElementById("bs-ib-borrow").textContent=fmtL(db.interbankBorrowed);
   document.querySelectorAll(".op-btn").forEach(b=>{if(db.locked)b.disabled=true;});
   saveGame();
 }
@@ -1180,14 +1179,14 @@ function plotSeries(canvasId, labels, series, unit, bg, fg, grid) {
 function resetSim() {
   if(!confirm("¿Iniciar nueva partida? La copia de v4 se conserva."))return;
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-  db = initialState();initTreasury();initRivals();initHR();initRegulation();
+  db = initialState();initAdvanced();initTreasury();initRivals();initHR();initRegulation();
   document.getElementById("rng-act-rate").value = db.actRate;
   document.getElementById("rng-sav-rate").value = db.savRate;
   document.getElementById("rng-cd-rate").value = db.cdRate;
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("NUEVA PARTIDA BCH-98 PRO v5.4 — modular INICIADA — BALANCE CUADRADO.", "pos");
+  logEvent("NUEVA PARTIDA BCH-98 PRO v5.5 — modular INICIADA — BALANCE CUADRADO.", "pos");
   generateAppsList();
   renderAll();
 }
@@ -1221,7 +1220,7 @@ function wrapOperation(fn,name){return function(...args){
  if(transactionActive)return fn(...args);if(db.locked)return;
  if(getAuditImbalance().diff!==0){logEvent("Operación bloqueada: partida con descuadre previo.","neg");return;}
  const prev=JSON.parse(JSON.stringify(db)),before=balanceAccounts();transactionActive=true;
- try{fn(...args);const diff=getAuditImbalance().diff;if(!Number.isFinite(diff)||diff!==0)throw Error("Diferencia "+fmtL(diff));const after=balanceAccounts();const lines=Object.keys(after).map(account=>({account,delta:after[account]-before[account]})).filter(l=>l.delta!==0).map(l=>({account:l.account,debit:Math.max(0,l.delta),credit:Math.max(0,-l.delta)}));if(lines.length)db.ledger.push({id:db.ledger.length+1,period:"T"+prev.q+"-"+prev.yr,concept:name,lines});}
+ try{fn(...args);normalizeMoney();const diff=getAuditImbalance().diff;if(!Number.isFinite(diff)||diff!==0)throw Error("Diferencia "+fmtL(diff));const after=balanceAccounts();const lines=Object.keys(after).map(account=>({account,delta:(toCents(after[account])-toCents(before[account]))/100})).filter(l=>l.delta!==0).map(l=>({account:l.account,debit:Math.max(0,l.delta),credit:Math.max(0,-l.delta)}));if(lines.reduce((s,l)=>s+toCents(l.debit)-toCents(l.credit),0)!==0)throw Error("Asiento no cuadra en centavos");if(lines.length)db.ledger.push({id:db.ledger.length+1,period:"T"+prev.q+"-"+prev.yr,concept:name,lines});}
  catch(e){db=prev;logEvent("Operación revertida por auditoría: "+e.message,"neg");}
  finally{transactionActive=false;renderAll();}
 }}
@@ -1268,7 +1267,7 @@ function renderTrialBalance(){
  let deb=0,cred=0;for(const a of db.ledger||[])for(const l of a.lines||[])if(l.account===name){deb+=l.debit;cred+=l.credit;}
  return {name,saldo,deb,cred,opening:saldo-deb+cred};
  });
- const total=rows.reduce((s,r)=>s+r.saldo,0);
+ const total=moneySum(rows.map(r=>r.saldo));
  el.innerHTML="<p>Saldo inicial reconstruido desde los movimientos registrados en v5.0; los períodos anteriores a esa versión no se reconstruyen individualmente.</p><table><thead><tr><th>Cuenta</th><th>Saldo inicial neto</th><th>Mov. Debe</th><th>Mov. Haber</th><th>Saldo deudor</th><th>Saldo acreedor</th></tr></thead><tbody>"+rows.map(r=>"<tr><td>"+r.name+"</td><td>"+fmtL(r.opening)+"</td><td>"+fmtL(r.deb)+"</td><td>"+fmtL(r.cred)+"</td><td>"+fmtL(Math.max(0,r.saldo))+"</td><td>"+fmtL(Math.max(0,-r.saldo))+"</td></tr>").join("")+"</tbody></table><p><strong>Diferencia de saldos: "+fmtL(total)+"</strong></p>";
 }
 const monthlyBankCycle=wrapOperation(function(key){if(db.lastMonthly===key)return;creditMonthly();cardsMonthly();treasuryMonthly();rivalsMonthly();hrMonthly();db.lastMonthly=key;for(const p of db.profiles)p.creditAgeMonths++;},"Ciclo mensual crédito y tarjetas");
@@ -1276,9 +1275,10 @@ markCreditArrears=wrapOperation(markCreditArrears,"Mora");refinanceCredit=wrapOp
 const dailyTreasuryCycle=wrapOperation(treasuryDaily,"Revaluación diaria y vencimientos");
 newInterbank=wrapOperation(newInterbank,"Contrato interbancario");settleInterbank=wrapOperation(settleInterbank,"Liquidación interbancaria");bondTrade=wrapOperation(bondTrade,"Bonos");registerCollateral=wrapOperation(registerCollateral,"Registro garantía");makePortfolioOffer=wrapOperation(makePortfolioOffer,"Compra parcial cartera");seizeOrRecover=wrapOperation(recoverCollateral,"Recuperación vinculada");lendInterbank=(amount)=>newInterbank("LEND",amount,90);mergeWeakCompetitor=()=>{const i=db.rivals.findIndex(r=>r.stress>=55&&!db.deals.some(d=>d.name===r.name&&d.period===db.yr+"-"+db.q));if(i>=0)makePortfolioOffer(i);};
 openManagedBranch=wrapOperation(openManagedBranch,"Apertura agencia");closeManagedBranch=wrapOperation(closeManagedBranch,"Cierre agencia");hireManagedStaff=wrapOperation(hireManagedStaff,"Contratación");inspectBank=wrapOperation(inspectBank,"Inspección regulatoria");openBranch=()=>openManagedBranch(HR_CITIES[db.hrBranches.length%10]);closeBranch=()=>closeManagedBranch();
+placeAuctionBid=wrapOperation(placeAuctionBid,"Puja simulada");acquireBank=wrapOperation(acquireBank,"Adquisición integral simulada");runEconomicScenario=wrapOperation(runEconomicScenario,"Escenario económico");
 const saved = loadGame();
 if (saved) {
-  db = Object.assign(initialState(), saved);
+  db = Object.assign(initialState(), saved);initAdvanced();migrateCents();
   db.refreshesLeft=0;
   if(db.interbankLoans>0&&!db.contracts.length)db.contracts.push({amount:db.interbankLoans,rate:0.09,qLeft:2,bank:"Contrato migrado"});
   document.getElementById("rng-act-rate").value = db.actRate;
@@ -1289,7 +1289,7 @@ if (saved) {
   logEvent(`Partida v4.0 restaurada (T${db.q}-${db.yr}).`, "pos");
 } else {
   db = initialState();
-  logEvent("TERMINAL BCH-98 PRO v5.4 — modular INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  logEvent("TERMINAL BCH-98 PRO v5.5 — modular INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
 }
 
 if (!saved) {
