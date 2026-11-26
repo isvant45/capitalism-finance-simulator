@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BCH-98 PRO v5.2 — modular — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
+<title>BCH-98 PRO v5.3 — modular — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
   <div class="title-bar">
-    <div>🏛️ BCH-98 PRO v5.2 — modular — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
+    <div>🏛️ BCH-98 PRO v5.3 — modular — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
     <div class="title-controls">
       <button onclick="setTheme('light')">Claro</button><button onclick="setTheme('dark')">Oscuro</button><button onclick="setTheme('retro')">Retro</button>
     </div>
@@ -65,7 +65,7 @@
   </div>
 
   <!-- ACCIONES GLOBALES -->
-  <div class="calendar-bar"><strong id="calendar-date"></strong><button class="op-btn" onclick="advanceCalendarDays(1)">+1 Día</button><button class="op-btn" onclick="advanceCalendarDays(7)">+1 Sem</button><button class="op-btn" onclick="advanceCalendarDays(30)">+30 Días</button><button class="op-btn" onclick="advanceCalendarDays(90)">+90 Días</button><button id="btn-clock" class="op-btn" onclick="toggleAutoTime()">Reanudar</button><small>Créditos y tarjetas: cierre mensual. Captación y tesorería: cierre trimestral.</small></div><div id="action-toolbar" style="padding: 6px 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; border-bottom: 1px solid var(--win-dark);">
+  <div class="calendar-bar"><strong id="calendar-date"></strong><button class="op-btn" onclick="advanceCalendarDays(1)">+1 Día</button><button class="op-btn" onclick="advanceCalendarDays(7)">+1 Sem</button><button class="op-btn" onclick="advanceCalendarDays(30)">+30 Días</button><button class="op-btn" onclick="advanceCalendarDays(90)">+90 Días</button><button id="btn-clock" class="op-btn" onclick="toggleAutoTime()">Reanudar</button><small>Divisas y vencimientos interbancarios: diarios. Créditos, tarjetas y bonos: mensuales. Captación: trimestral.</small></div><div id="action-toolbar" style="padding: 6px 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; border-bottom: 1px solid var(--win-dark);">
     <button class="btn-go op-btn" onclick="closeCalendarQuarter()">⏩ CERRAR TRIMESTRE (CNBS &amp; Cierre)</button>
     <button class="op-btn" onclick="approvePrimeClients()">⭐ Aprobar Score simulado ≥ 720</button>
     <button class="op-btn" onclick="requestRediscount()">🏛️ Redescuento BCH (+L 20M)</button>
@@ -237,7 +237,7 @@
       </div>
 
       <!-- TAB 3: DIVISAS, COMPETIDORES E INTERBANCARIO -->
-      <div class="tab-content win-outset" id="t-fx">
+      <div class="tab-content win-outset" id="t-fx"><div class="win-group"><strong>Tesorería: contratos y bonos</strong><p><button class="op-btn" onclick="newInterbank('BORROW',15000000,90)">Solicitar L 15M · 90 días</button> <button class="op-btn" onclick="bondTrade('BUY',10000000)">Comprar bonos L 10M</button> <button class="op-btn" onclick="bondTrade('SELL',10000000)">Vender bonos L 10M</button></p><div id="treasury-details" style="overflow:auto"></div><div id="remittance-history"></div></div><details class="win-group" open><summary>Competidores y adquisición parcial de cartera</summary><div id="competitor-detail" style="overflow:auto"></div></details>
         <div class="grid-2">
           <div class="win-group">
             <div class="win-group-title">Mesa de Subasta de Divisas (USD / HNL)</div>
@@ -264,7 +264,7 @@
             </p>
             <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">
               <button class="op-btn" onclick="lendInterbank(15000000)">🤝 Colocar Préstamo Interbancario (L 15M)</button>
-              <button class="op-btn" onclick="mergeWeakCompetitor()">🏢 Fusionar / Adquirir Competidor Débil</button>
+              <button class="op-btn" onclick="mergeWeakCompetitor()">🏢 Comprar cartera de competidor débil</button>
             </div>
             <div class="win-inset" style="max-height:115px; overflow:auto;">
               <table>
@@ -279,7 +279,7 @@
       </div>
 
       <!-- TAB 4: BALANCE, ADJUDICADOS Y CONTABILIDAD -->
-      <div class="tab-content win-outset" id="t-balance">
+      <div class="tab-content win-outset" id="t-balance"><div class="win-group"><strong>Garantías vinculadas</strong><p><select id="gar-loan"></select> <select id="gar-type"><option>INMUEBLE</option><option>VEHICULO</option><option>MAQUINARIA</option><option>OTRO</option></select> <input id="gar-value" type="number" min="1" step="1" placeholder="Avalúo HNL"> <button class="op-btn" onclick="registerSelectedCollateral()">Vincular garantía</button></p><div id="guarantee-list" style="overflow:auto"></div></div>
         <div class="grid-2">
           <div>
             <strong>ACTIVOS (Total: <span class="mono" id="bs-tot-assets">L 0</span>)</strong>
@@ -287,7 +287,7 @@
               <table>
                 <tr><td>Caja &amp; Encaje (HNL)</td><td class="num mono" id="bs-cash-hnl">L 0</td></tr>
                 <tr><td>Disponibilidades USD (Val. Ref.)</td><td class="num mono" id="bs-cash-usd">L 0</td></tr>
-                <tr><td>Colocaciones Interbancarias</td><td class="num mono" id="bs-interbank">L 0</td></tr>
+                <tr><td>Bonos gubernamentales</td><td class="num mono" id="bs-bonds">L 0</td></tr><tr><td>Colocaciones Interbancarias</td><td class="num mono" id="bs-interbank">L 0</td></tr>
                 <tr><td>Cartera Préstamos Vigentes</td><td class="num mono pos" id="bs-loans-ok">L 0</td></tr>
                 <tr><td>Cartera en Mora</td><td class="num mono neg" id="bs-loans-bad">L 0</td></tr>
                 <tr><td><b>Activos Eventuales</b> (Adjudicados)</td><td class="num mono warn" id="bs-eventual">L 0</td></tr>
@@ -303,7 +303,7 @@
               <table>
                 <tr><td>Depósitos Ahorro + Cheques</td><td class="num mono" id="bs-dep-liq">L 0</td></tr>
                 <tr><td>Certificados CD / CDP</td><td class="num mono" id="bs-dep-cdp">L 0</td></tr>
-                <tr><td>Redescuento BCH (Máx 50% Pat.)</td><td class="num mono neg" id="bs-rediscount">L 0</td></tr>
+                <tr><td>Fondeo interbancario</td><td class="num mono" id="bs-ib-borrow">L 0</td></tr><tr><td>Redescuento BCH (Máx 50% Pat.)</td><td class="num mono neg" id="bs-rediscount">L 0</td></tr>
                 <tr style="border-top:1px solid var(--win-dark); font-weight:bold;">
                   <td>TOTAL PASIVOS</td>
                   <td class="num mono" id="bs-tot-liab">L 0</td>
@@ -382,6 +382,9 @@
 <script src="js/customers.js"></script>
 <script src="js/credit.js"></script>
 <script src="js/cards.js"></script>
+<script src="js/treasury.js"></script>
+<script src="js/market.js"></script>
+<script src="js/competitors.js"></script>
 <script src="js/core.js"></script>
 </body>
 </html>
