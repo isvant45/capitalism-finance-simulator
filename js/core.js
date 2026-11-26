@@ -235,7 +235,7 @@ function initialState() {
     cdRate: 7.5,
     minScore: 580,
     branches: 3,
-    refreshesLeft: 0, profiles: [], customerSeq: 1, cards: [], contracts: [], periods: [], ledger: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
+    refreshesLeft: 0, govBonds:0, interbankBorrowed:0, remittances:[], treasurySeq:1, ibHistory:[], collaterals:[], marketSeq:1, deals:[], profiles: [], customerSeq: 1, cards: [], contracts: [], periods: [], ledger: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
     paidCap: 120000000,
     retained: 30000000,
     cashHnl: 284300000,
@@ -527,11 +527,12 @@ function sellEventual(idx) {
   if (db.locked) return;
   const item = db.eventualAssets[idx];
   if (!item) return;
-  const sale = Math.round(item.bookVal * 0.92);
+  const sale = item.auctionPrice ?? Math.round(item.bookVal * 0.92);
   const diff = sale - item.bookVal;
   db.cashHnl += sale;
   postPL(diff, "fees", `Liquidación activo eventual: ${item.title}`);
   db.eventualAssets.splice(idx, 1);
+  const g=db.collaterals.find(x=>x.id===item.collateralId);if(g)g.status="Vendida";
   logEvent(`Vendido ${item.title} por ${fmtL(sale)} (${diff >= 0 ? "+" : ""}${fmtL(diff)}).`, diff >= 0 ? "pos" : "warn");
   renderAll();
 }
@@ -573,7 +574,8 @@ function processRemittances() {
   if (db.locked) return;
   if(db.remittanceQuota<=0){logEvent("No hay más lotes pendientes este trimestre.","warn");return;}
   db.remittanceQuota--;
-  const fee=Math.round(db.clients*12);
+  const usd=Math.round(25000*Math.max(1,db.branches)*db.clients/6400),fee=Math.round(usd*.025*db.fxRate);
+  db.remittances.push({ref:"REM-"+db.treasurySeq++,origin:["EE.UU.","España","Canadá"][db.remittances.length%3],usd,fee,date:db.calendarDate});
   db.cashHnl += fee;
   postPL(fee, "fees", "Comisión Remesas y Transferencias");
   logEvent(`Lote de remesas y transferencias liquidado. Comisión: ${fmtL(fee)}.`, "pos");
@@ -582,7 +584,7 @@ function processRemittances() {
 
 // Compra y venta de divisas con contabilidad exacta del costo, comisión y resultado cambiario
 function tradeFX(side, usdAmt) {
-  if (db.locked) return;
+  if (db.locked || !["BUY","SELL"].includes(side)||!Number.isSafeInteger(usdAmt)||usdAmt<=0) return;
   const spread = 0.18;
   const commRate = 0.012;
 
@@ -690,6 +692,7 @@ function issueNewShares() {
   if(db.capitalQuota<=0||db.paidCap+capAdd>db.capitalAuthorized||db.paidCap+db.retained<90000000){logEvent("No hay suscripción disponible.","warn");return;}
   db.capitalQuota--;
   db.paidCap += capAdd;
+  db.sharesIssued+=capAdd/100;
   db.cashHnl += capAdd;
   db.shareholders += 15;
   recordJournal("Ampliación de Capital Suscrito y Pagado", capAdd, capAdd);
@@ -700,7 +703,7 @@ function issueNewShares() {
 function requestRediscount() {
   if (db.locked) return;
   const amt = 20000000;
-  const maxAllowed = Math.round(Math.max(0, db.paidCap + db.retained) * 0.50);
+  const maxAllowed = Math.round(Math.max(0, db.paidCap + db.retained) * 0.50)-db.interbankBorrowed;
   if (db.rediscount + amt > maxAllowed) {
     logEvent(`Límite de redescuento BCH excedido (Máx ${fmtL(maxAllowed)} = 50% Patrimonio).`, "neg");
     return;
@@ -768,24 +771,6 @@ function nextQuarter() {
 
   // Acumular hasta el cierre efectivo.
 
-  // 1. Variación cambiaria sobre posición en USD
-  const prevFx = db.fxRate;
-  const nextFx = +(prevFx * (1 + (Math.random() * 0.022 - 0.008))).toFixed(2);
-  const fxDelta = nextFx - prevFx;
-  const fxGainLoss = Math.round(db.usdBalance * nextFx)-Math.round(db.usdBalance * prevFx);
-  db.fxRate = nextFx;
-  if (fxGainLoss !== 0) {
-    postPL(fxGainLoss, "fx", `Revaluación FX (${prevFx.toFixed(2)} -> ${nextFx.toFixed(2)})`);
-  }
-
-  // 2. Intereses de colocaciones interbancarias
-  if (db.interbankLoans > 0) {
-    const ibInt = Math.round(db.interbankLoans * (0.09 / 4));
-    db.cashHnl += ibInt;
-    postPL(ibInt, "loans", "Intereses colocación interbancaria");
-  }
-
-  for(let i=db.contracts.length-1;i>=0;i--){const c=db.contracts[i];if(--c.qLeft<=0){db.cashHnl+=c.amount;db.interbankLoans-=c.amount;db.contracts.splice(i,1);logEvent("Vencimiento interbancario "+fmtL(c.amount),"pos");}}
   // 4. Comisiones por servicios financieros
   const svcFee = Math.round(db.clients * 40);
   db.cashHnl += svcFee;
@@ -830,11 +815,6 @@ function nextQuarter() {
   db.refreshesLeft = 0;
   db.remittanceQuota=Math.max(1,Math.floor(db.clients/1500));
   db.capitalQuota=db.pl.net>0?1:0;
-
-  // Evolución de bancos rivales
-  db.rivals.forEach(r => {
-    r.stress = Math.max(10, Math.min(95, r.stress + Math.floor(Math.random() * 17 - 7)));
-  });
 
   // 9. Supervisión CNBS (Encaje legal mínimo 15%)
   clampProvisions();
@@ -1010,6 +990,7 @@ function renderTables() {
 }
 
 function renderAll() {
+  initTreasury();initRivals();
   clampProvisions();
   recomputeNetIncome();
 
@@ -1118,6 +1099,9 @@ function renderAll() {
   ensureCustomers();renderCustomers();renderCardOperations();
   renderCalendar();
   renderTrialBalance();
+  renderTreasury();renderMarket();renderCompetitors();
+  document.getElementById("bs-bonds").textContent=fmtL(db.govBonds);document.getElementById("bs-ib-borrow").textContent=fmtL(db.interbankBorrowed);
+  document.querySelectorAll(".op-btn").forEach(b=>{if(db.locked)b.disabled=true;});
   saveGame();
 }
 
@@ -1229,7 +1213,7 @@ function renderV5(){
   const el=document.getElementById("v5-panel");if(!el)return;
   const last=db.periods.at(-1), y=db.periods.filter(p=>p.yr===db.yr).reduce((n,p)=>n+p.net,0)+db.pl.net;
   const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
-  el.innerHTML="<h3>Operaciones y cierres — parámetros simulados</h3><p>Remesas pendientes: "+db.remittanceQuota+" | Suscripciones disponibles: "+db.capitalQuota+" | Resultado anual: "+fmtL(y)+"</p><p>Último trimestre cerrado: "+(last?"T"+last.q+"-"+last.yr+" · "+fmtL(last.net):"Sin cierres")+"</p><h4>Tarjetas revolventes</h4><table><thead><tr><th>Cliente</th><th>Categoría</th><th>Score</th><th>Límite</th><th>Utilizado</th><th>Disponible</th></tr></thead><tbody>"+db.cards.map(c=>"<tr><td>"+esc(c.client)+"</td><td>"+esc(c.label)+"</td><td>"+c.score+"</td><td>"+fmtL(c.limit)+"</td><td>"+fmtL(c.bal)+"</td><td>"+fmtL(c.limit-c.bal)+"</td></tr>").join("")+"</tbody></table><h4>Contratos interbancarios</h4>"+db.contracts.map(c=>"<p>"+esc(c.bank)+" · "+fmtL(c.amount)+" · vence en "+c.qLeft+"T</p>").join("")+"<h4>Historial de cierres</h4>"+db.periods.slice(-8).reverse().map(p=>"<p>T"+p.q+"-"+p.yr+": "+fmtL(p.net)+"</p>").join("");
+  el.innerHTML="<h3>Operaciones y cierres — parámetros simulados</h3><p>Remesas pendientes: "+db.remittanceQuota+" | Suscripciones disponibles: "+db.capitalQuota+" | Resultado anual: "+fmtL(y)+"</p><p>Último trimestre cerrado: "+(last?"T"+last.q+"-"+last.yr+" · "+fmtL(last.net):"Sin cierres")+"</p><h4>Tarjetas revolventes</h4><table><thead><tr><th>Cliente</th><th>Categoría</th><th>Score</th><th>Límite</th><th>Utilizado</th><th>Disponible</th></tr></thead><tbody>"+db.cards.map(c=>"<tr><td>"+esc(c.client)+"</td><td>"+esc(c.label)+"</td><td>"+c.score+"</td><td>"+fmtL(c.limit)+"</td><td>"+fmtL(c.bal)+"</td><td>"+fmtL(c.limit-c.bal)+"</td></tr>").join("")+"</tbody></table><h4>Contratos interbancarios</h4>"+db.contracts.map(c=>"<p>"+esc(c.bank)+" · "+fmtL(c.amount)+" · "+Math.max(0,c.daysLeft)+" días</p>").join("")+"<h4>Historial de cierres</h4>"+db.periods.slice(-8).reverse().map(p=>"<p>T"+p.q+"-"+p.yr+": "+fmtL(p.net)+"</p>").join("");
 }
 
 
@@ -1239,7 +1223,7 @@ function wrapOperation(fn,name){return function(...args){
  if(transactionActive)return fn(...args);if(db.locked)return;
  if(getAuditImbalance().diff!==0){logEvent("Operación bloqueada: partida con descuadre previo.","neg");return;}
  const prev=JSON.parse(JSON.stringify(db)),before=balanceAccounts();transactionActive=true;
- try{fn(...args);const diff=getAuditImbalance().diff;if(diff!==0)throw Error("Diferencia "+fmtL(diff));const after=balanceAccounts();const lines=Object.keys(after).map(account=>({account,delta:after[account]-before[account]})).filter(l=>l.delta!==0).map(l=>({account:l.account,debit:Math.max(0,l.delta),credit:Math.max(0,-l.delta)}));if(lines.length)db.ledger.push({id:db.ledger.length+1,period:"T"+prev.q+"-"+prev.yr,concept:name,lines});}
+ try{fn(...args);const diff=getAuditImbalance().diff;if(!Number.isFinite(diff)||diff!==0)throw Error("Diferencia "+fmtL(diff));const after=balanceAccounts();const lines=Object.keys(after).map(account=>({account,delta:after[account]-before[account]})).filter(l=>l.delta!==0).map(l=>({account:l.account,debit:Math.max(0,l.delta),credit:Math.max(0,-l.delta)}));if(lines.length)db.ledger.push({id:db.ledger.length+1,period:"T"+prev.q+"-"+prev.yr,concept:name,lines});}
  catch(e){db=prev;logEvent("Operación revertida por auditoría: "+e.message,"neg");}
  finally{transactionActive=false;renderAll();}
 }}
@@ -1264,6 +1248,7 @@ function advanceCalendarDays(days){
  if(db.locked||!Number.isInteger(days)||days<1||days>366)return;
  for(let i=0;i<days&&!db.locked;i++){
    const d=currentCalendar();const oldMonth=d.getUTCMonth();d.setUTCDate(d.getUTCDate()+1);
+   const dailyKey=d.toISOString().slice(0,10);dailyTreasuryCycle(dailyKey);if(db.lastTreasuryDay!==dailyKey)break;
    if(d.getUTCMonth()!==oldMonth){const key=d.toISOString().slice(0,7);monthlyBankCycle(key);if(db.lastMonthly!==key)break;}
    const y=d.getUTCFullYear(),q=Math.floor(d.getUTCMonth()/3)+1;
    if(q!==db.q||y!==db.yr){const prev=db.q+"-"+db.yr;nextQuarter();if(prev===db.q+"-"+db.yr)break;}
@@ -1288,8 +1273,10 @@ function renderTrialBalance(){
  const total=rows.reduce((s,r)=>s+r.saldo,0);
  el.innerHTML="<p>Saldo inicial reconstruido desde los movimientos registrados en v5.0; los períodos anteriores a esa versión no se reconstruyen individualmente.</p><table><thead><tr><th>Cuenta</th><th>Saldo inicial neto</th><th>Mov. Debe</th><th>Mov. Haber</th><th>Saldo deudor</th><th>Saldo acreedor</th></tr></thead><tbody>"+rows.map(r=>"<tr><td>"+r.name+"</td><td>"+fmtL(r.opening)+"</td><td>"+fmtL(r.deb)+"</td><td>"+fmtL(r.cred)+"</td><td>"+fmtL(Math.max(0,r.saldo))+"</td><td>"+fmtL(Math.max(0,-r.saldo))+"</td></tr>").join("")+"</tbody></table><p><strong>Diferencia de saldos: "+fmtL(total)+"</strong></p>";
 }
-const monthlyBankCycle=wrapOperation(function(key){if(db.lastMonthly===key)return;creditMonthly();cardsMonthly();db.lastMonthly=key;for(const p of db.profiles)p.creditAgeMonths++;},"Ciclo mensual crédito y tarjetas");
+const monthlyBankCycle=wrapOperation(function(key){if(db.lastMonthly===key)return;creditMonthly();cardsMonthly();treasuryMonthly();rivalsMonthly();db.lastMonthly=key;for(const p of db.profiles)p.creditAgeMonths++;},"Ciclo mensual crédito y tarjetas");
 markCreditArrears=wrapOperation(markCreditArrears,"Mora");refinanceCredit=wrapOperation(refinanceCredit,"Refinanciamiento");settleCredit=wrapOperation(settleCredit,"Cancelación crédito");cardSpend=wrapOperation(cardSpend,"Consumo tarjeta");cardPay=wrapOperation(cardPay,"Pago tarjeta");cardBlock=wrapOperation(cardBlock,"Bloqueo tarjeta");
+const dailyTreasuryCycle=wrapOperation(treasuryDaily,"Revaluación diaria y vencimientos");
+newInterbank=wrapOperation(newInterbank,"Contrato interbancario");settleInterbank=wrapOperation(settleInterbank,"Liquidación interbancaria");bondTrade=wrapOperation(bondTrade,"Bonos");registerCollateral=wrapOperation(registerCollateral,"Registro garantía");makePortfolioOffer=wrapOperation(makePortfolioOffer,"Compra parcial cartera");seizeOrRecover=wrapOperation(recoverCollateral,"Recuperación vinculada");lendInterbank=(amount)=>newInterbank("LEND",amount,90);mergeWeakCompetitor=()=>{const i=db.rivals.findIndex(r=>r.stress>=55&&!db.deals.some(d=>d.name===r.name&&d.period===db.yr+"-"+db.q));if(i>=0)makePortfolioOffer(i);};
 const saved = loadGame();
 if (saved) {
   db = Object.assign(initialState(), saved);
