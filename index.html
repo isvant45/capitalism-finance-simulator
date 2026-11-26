@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Áureo Bank | Digital Banking Simulator V6.3</title>
+<title>Áureo Bank | Digital Banking Simulator V6.4</title>
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/digital-banking.css">
@@ -12,7 +12,7 @@
 
 <div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
-  <header class="title-bar"><div class="brand"><button class="nav-toggle" onclick="toggleBankNav()" aria-label="Abrir menú">☰</button><span class="brand-logo">A</span><div><b>ÁUREO BANK</b><small>Digital Banking · V6.3</small></div></div><div class="global-search"><label for="bank-search" class="sr-only">Buscar clientes o módulos</label><input id="bank-search" placeholder="Buscar clientes o módulos…" oninput="searchBank(this.value)" autocomplete="off"><div id="bank-search-results" hidden></div></div><div class="title-controls"><button onclick="toggleBankAlerts()">Actividad <span id="activity-count">0</span></button><button onclick="setTheme(document.body.classList.contains('dark-mode')?'light':'dark')" id="btn-theme">Modo oscuro</button><button onclick="selectModule('t-system')">Dirección general</button></div><div id="bank-alerts" hidden></div></header>
+  <header class="title-bar"><div class="brand"><button class="nav-toggle" onclick="toggleBankNav()" aria-label="Abrir menú">☰</button><span class="brand-logo">A</span><div><b>ÁUREO BANK</b><small>Digital Banking · V6.4</small></div></div><div class="global-search"><label for="bank-search" class="sr-only">Buscar clientes o módulos</label><input id="bank-search" placeholder="Buscar clientes o módulos…" oninput="searchBank(this.value)" autocomplete="off"><div id="bank-search-results" hidden></div></div><div class="title-controls"><button onclick="toggleBankAlerts()">Actividad <span id="activity-count">0</span></button><button onclick="setTheme(document.body.classList.contains('dark-mode')?'light':'dark')" id="btn-theme">Modo oscuro</button><button onclick="selectModule('t-system')">Dirección general</button></div><div id="bank-alerts" hidden></div></header>
   <!-- SUB-BARRA DE ENTORNO -->
   <div class="sub-bar">
     <div>
@@ -338,7 +338,7 @@
         </div>
       </div>
 
-<div class="tab-content win-outset" id="t-final"><div class="win-group"><strong>Supervisión simulada CNBS / BCH / FOSEDE</strong><div id="reg-summary"></div><button class="op-btn" onclick="inspectBank()">Inspección</button> <button id="rescue-btn" onclick="rescueBank()">Regularizar (aporte único condicionado)</button></div><div class="win-group"><strong>Agencias y talento humano</strong><div id="hr-list"></div><p><select id="hr-city"><option>San Pedro Sula</option><option>Choloma</option><option>Tegucigalpa</option><option>Puerto Cortés</option><option>La Ceiba</option><option>El Progreso</option><option>Comayagua</option><option>Villanueva</option><option>Santa Rosa de Copán</option><option>Choluteca</option></select> <button class="op-btn" onclick="openManagedBranch(document.getElementById('hr-city').value)">Abrir agencia L 4.5M</button></p><p><select id="hr-agency"></select> <select id="hr-role"><option>Cajero</option><option>Asesor</option><option>Analista</option><option>Gestor de cobros</option><option>Gerente</option><option>Auditor</option></select> <input type="number" id="hr-count" min="1" max="10" value="1"> <button class="op-btn" onclick="hireFromUI()">Contratar</button></p></div><div class="win-group" id="executive-metrics"></div></div><div class="tab-content win-outset" id="t-system"><div class="win-group"><h3>Partidas y respaldo</h3><p>Espacio 1 <button onclick="saveSlot(1)">Guardar</button> <button onclick="loadSlot(1)">Cargar</button></p><p>Espacio 2 <button onclick="saveSlot(2)">Guardar</button> <button onclick="loadSlot(2)">Cargar</button></p><p>Espacio 3 <button onclick="saveSlot(3)">Guardar</button> <button onclick="loadSlot(3)">Cargar</button></p><button onclick="exportGame()">Exportar JSON</button> <label>Importar JSON <input type="file" accept=".json" onchange="importGame(this)"></label><p>Los archivos se guardan localmente en este navegador.</p></div><div class="win-group"><h3>Suite ampliada y escenarios de estrés</h3><p><button class="op-btn" onclick="runEconomicScenario('FX_SHOCK')">Choque cambiario +6%</button> <button class="op-btn" onclick="runEconomicScenario('LIQUIDITY_RUN')">Retiro de depósitos</button> <button class="op-btn" onclick="runEconomicScenario('CREDIT_CRUNCH')">Crisis crediticia</button></p><p>Escenarios aplicados a la partida activa, una vez por trimestre y tipo.</p><button onclick="showFullTests()">Ejecutar pruebas (incluye diez años simulados)</button><div id="test-results"></div></div></div>
+<div class="tab-content win-outset" id="t-final"><div class="win-group"><strong>Supervisión simulada CNBS / BCH / FOSEDE</strong><div id="reg-summary"></div><button class="op-btn" onclick="inspectBank()">Inspección</button> <button id="rescue-btn" onclick="rescueBank()">Regularizar (aporte único condicionado)</button></div><div class="win-group"><strong>Agencias y talento humano</strong><div id="hr-list"></div><p><select id="hr-city"><option>San Pedro Sula</option><option>Choloma</option><option>Tegucigalpa</option><option>Puerto Cortés</option><option>La Ceiba</option><option>El Progreso</option><option>Comayagua</option><option>Villanueva</option><option>Santa Rosa de Copán</option><option>Choluteca</option></select> <button class="op-btn" onclick="openManagedBranch(document.getElementById('hr-city').value)">Abrir agencia L 4.5M</button></p><p><select id="hr-agency"></select> <select id="hr-role"><option>Cajero</option><option>Asesor</option><option>Analista</option><option>Gestor de cobros</option><option>Gerente</option><option>Auditor</option></select> <input type="number" id="hr-count" min="1" max="10" value="1"> <button class="op-btn" onclick="hireFromUI()">Contratar</button></p></div><div class="win-group" id="executive-metrics"></div></div><div class="tab-content win-outset" id="t-system"><div class="win-group"><h3>Partidas y respaldo</h3><p id="storage-status64" role="status">Almacenamiento local</p><p><button onclick="restoreBackup64()">Restaurar respaldo previo</button> <button onclick="downloadBackup64()">Descargar respaldo previo</button></p><p>Espacio 1 <button onclick="saveSlot(1)">Guardar</button> <button onclick="loadSlot(1)">Cargar</button></p><p>Espacio 2 <button onclick="saveSlot(2)">Guardar</button> <button onclick="loadSlot(2)">Cargar</button></p><p>Espacio 3 <button onclick="saveSlot(3)">Guardar</button> <button onclick="loadSlot(3)">Cargar</button></p><button onclick="exportGame()">Exportar JSON</button> <label>Importar JSON <input type="file" accept=".json" onchange="importGame(this)"></label><p>Los archivos se guardan localmente en este navegador.</p></div><div class="win-group"><h3>Suite ampliada y escenarios de estrés</h3><p><button class="op-btn" onclick="runEconomicScenario('FX_SHOCK')">Choque cambiario +6%</button> <button class="op-btn" onclick="runEconomicScenario('LIQUIDITY_RUN')">Retiro de depósitos</button> <button class="op-btn" onclick="runEconomicScenario('CREDIT_CRUNCH')">Crisis crediticia</button></p><p>Escenarios aplicados a la partida activa, una vez por trimestre y tipo.</p><button onclick="showFullTests()">Ejecutar pruebas (incluye diez años simulados)</button><div id="test-results"></div></div><div class="win-group"><h3>Auditoría integral y trazabilidad</h3><div id="audit-root64"></div><button onclick="exportLedger64()">Exportar libro diario CSV</button> <button onclick="exportTestReport64()">Exportar último informe de pruebas</button><p><a href="SOURCES.md" target="_blank" rel="noopener">Fuentes y parámetros simulados</a> · <a href="README.md" target="_blank" rel="noopener">Manual de uso</a></p></div></div>
       <!-- TAB 5: INDICADORES HISTÓRICOS -->
       <div class="tab-content win-outset" id="t-graficos">
         <div class="control-row" style="margin-bottom:4px;">
@@ -366,7 +366,7 @@
 
   <!-- BARRA DE ESTADO INFERIOR -->
   <div class="status-bar">
-    <div class="status-panel mono" id="st-msg">SISTEMA ACTIVO — Supervisión CNBS y Auditoría Contable Activa</div>
+    <div class="status-panel mono" id="st-msg">SISTEMA ACTIVO — Supervisión simulada y auditoría contable activa</div>
     <div class="status-panel mono" id="st-meta">Clientes: 5,200 | Accionistas: 140</div>
   </div>
 </div>
@@ -390,6 +390,7 @@
 <script src="js/crm.js"></script>
 <script src="js/digitalBanking.js"></script>
 <script src="js/digitalUI.js"></script>
+<script src="js/tests.js"></script>
 <script src="js/core.js"></script>
 </body>
 </html>
