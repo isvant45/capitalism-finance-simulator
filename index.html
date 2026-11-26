@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BCH-98 PRO v4.0 — Simulador Bancario Integral (Banca HN, Equifax & CNBS)</title>
+<title>BCH-98 PRO v5.0 — núcleo — Simulador Bancario Integral (Banca HN, Equifax & CNBS)</title>
 <style>
   :root {
     --bg-desktop: #008080;
@@ -351,7 +351,7 @@
 <div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
   <div class="title-bar">
-    <div>🏛️ BCH-98 PRO v4.0 — Banca Personas, PyME, Empresarial, Tarjetas &amp; Equifax HN</div>
+    <div>🏛️ BCH-98 PRO v5.0 — núcleo — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
     <div class="title-controls">
       <button onclick="toggleTheme()" id="btn-theme">🌙 Modo Oscuro</button>
     </div>
@@ -387,11 +387,11 @@
       <div class="kpi-val mono" id="kpi-usd">$1,200,000</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Encaje Legal (Mín 15%)</div>
+      <div class="kpi-label">Encaje (umbral simulado 15%)</div>
       <div class="kpi-val mono pos" id="kpi-encaje">100.0%</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Solvencia Basilea (Mín 10%)</div>
+      <div class="kpi-label">Solvencia (umbral simulado 10%)</div>
       <div class="kpi-val mono pos" id="kpi-car">100.0%</div>
     </div>
     <div class="kpi-card">
@@ -407,7 +407,7 @@
   <!-- ACCIONES GLOBALES -->
   <div id="action-toolbar" style="padding: 6px 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; border-bottom: 1px solid var(--win-dark);">
     <button class="btn-go op-btn" onclick="nextQuarter()">⏩ CERRAR TRIMESTRE (CNBS &amp; Cierre)</button>
-    <button class="op-btn" onclick="approvePrimeClients()">⭐ Aprobar Score Equifax ≥ 720</button>
+    <button class="op-btn" onclick="approvePrimeClients()">⭐ Aprobar Score simulado ≥ 720</button>
     <button class="op-btn" onclick="requestRediscount()">🏛️ Redescuento BCH (+L 20M)</button>
     <button class="op-btn" onclick="repayRediscount()">💳 Pagar Redescuento (-L 20M)</button>
     <button class="op-btn" onclick="issueNewShares()">📈 Ampliar Capital (+L 30M)</button>
@@ -481,7 +481,7 @@
 
     <!-- PANEL DERECHO: PESTAÑAS -->
     <div>
-      <div class="tabs">
+      <div id="v5-panel" class="win-group" style="max-height:320px;overflow:auto"></div><div class="tabs">
         <div class="tab-btn active" onclick="openTab('t-credito', this)">💳 Crédito, Tarjetas &amp; Equifax (<span id="cnt-apps">0</span>)</div>
         <div class="tab-btn" onclick="openTab('t-captacion', this)">🏦 Captación, Remesas &amp; CDP</div>
         <div class="tab-btn" onclick="openTab('t-fx', this)">💱 Divisas &amp; Mercado Interbancario</div>
@@ -492,7 +492,7 @@
       <!-- TAB 1: CRÉDITO, TARJETAS Y EQUIFAX -->
       <div class="tab-content win-outset active" id="t-credito">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
-          <strong>Solicitudes en Comité (Score Equifax · Descuento Tasa ≥720 · Clásica/Oro/Platinum/Black)</strong>
+          <strong>Solicitudes en Comité (Score simulado · Descuento Tasa ≥720 · Clásica/Oro/Platinum/Black)</strong>
           <button class="op-btn" onclick="refreshApps()" id="btn-refresh-apps">🔄 Regenerar (<span id="lbl-ref-left">2</span>)</button>
         </div>
         <div class="win-inset" style="max-height: 225px; overflow:auto; margin-bottom:10px;">
@@ -719,7 +719,7 @@
 </div>
 
 <script>
-const STORAGE_KEY = "bch98_pro_v40_save";
+const STORAGE_KEY = "bch98_pro_v50_save";
 
 const PRODUCTS = [
   { seg: "PERSONAS", label: "Tarjeta Clásica", cardTier: "Clásica", minInc: 18000, minAmt: 60000, maxAmt: 350000, minQ: 4, maxQ: 8, rateAdj: 9.5, baseDef: 0.11, collateral: "Línea Revolvente" },
@@ -750,7 +750,7 @@ function initialState() {
   // paidCap (120,000,000) + retained (30,000,000) = 150,000,000
   return {
     q: 1,
-    yr: 2000,
+    yr: 2026,
     focus: "ALL",
     fxRate: 24.75,
     actRate: 14.0,
@@ -758,7 +758,7 @@ function initialState() {
     cdRate: 7.5,
     minScore: 580,
     branches: 3,
-    refreshesLeft: 2,
+    refreshesLeft: 0, cards: [], contracts: [], periods: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
     paidCap: 120000000,
     retained: 30000000,
     cashHnl: 284300000,
@@ -795,7 +795,7 @@ function initialState() {
       net: 0
     },
     hist: {
-      labels: ["T1-00"],
+      labels: ["T1-26"],
       eq: [150.0],
       loans: [0.0],
       dep: [200.0],
@@ -815,7 +815,7 @@ function saveGame() {
 
 function loadGame() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("bch98_pro_v40_save");
     if (!raw) return null;
     const p = JSON.parse(raw);
     if (!p || typeof p.cashHnl !== "number") return null;
@@ -888,7 +888,8 @@ function getAuditImbalance() {
   const badLoans = db.loans.filter(l => l.status === "Mora").reduce((s, l) => s + l.bal, 0);
   const evVal = db.eventualAssets.reduce((s, e) => s + e.bookVal, 0);
   const usdHnl = Math.round(db.usdBalance * db.fxRate);
-  const totAssets = db.cashHnl + usdHnl + db.interbankLoans + okLoans + badLoans + evVal - db.provisions + db.fixedAssets;
+  const cardBal=(db.cards||[]).reduce((s,c)=>s+c.bal,0);
+  const totAssets = db.cashHnl + usdHnl + db.interbankLoans + okLoans + badLoans + cardBal + evVal - db.provisions + db.fixedAssets;
 
   const cdpVal = db.cdps.reduce((s, c) => s + c.amount, 0);
   const totDep = db.savingsDep + db.checkingDep + cdpVal;
@@ -900,7 +901,7 @@ function getAuditImbalance() {
     totAssets,
     totLP,
     diff: Math.round(totAssets - totLP),
-    okLoans,
+    okLoans:okLoans+cardBal,
     badLoans,
     evVal,
     usdHnl,
@@ -928,7 +929,7 @@ function openTab(id, el) {
 
 function changeFocus() {
   db.focus = document.getElementById("sel-focus").value;
-  generateAppsList();
+  if(db.locked) return;
   logEvent(`División seleccionada: ${document.getElementById("sel-focus").selectedOptions[0].text}`);
   renderAll();
 }
@@ -956,7 +957,7 @@ function getScoreDiscount(score) {
 
 function generateAppsList() {
   db.apps = [];
-  const pool = db.focus === "ALL" ? PRODUCTS : PRODUCTS.filter(p => p.seg === db.focus);
+  const pool = PRODUCTS;
   const count = 6 + Math.min(5, db.branches);
 
   for (let i = 0; i < count; i++) {
@@ -1011,7 +1012,15 @@ function approveApp(id) {
   const idx = db.apps.findIndex(a => a.id === id);
   if (idx === -1) return;
   const a = db.apps[idx];
-
+  const prod=PRODUCTS.find(p=>p.label===a.label);
+  if (a.score<Math.max(db.minScore,tierFloor(a.cardTier)) || a.income<(prod?.minInc||0)) {logEvent("Solicitud no cumple ingreso mínimo o score simulado.","warn");return;}
+  if(a.cardTier && a.label.includes("Tarjeta")){
+    const limit=Math.min(a.amt,Math.round(a.income*4));
+    if(limit<=0)return;
+    db.cards.push({id:a.id,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,status:"Activa"});
+    db.appHistory.push({...a,status:"Línea aprobada"});
+    db.apps.splice(idx,1);logEvent("Tarjeta emitida sin desembolso: "+fmtL(limit),"pos");renderAll();return;
+  }
   if (db.cashHnl < a.amt) {
     logEvent(`Caja HNL insuficiente para desembolsar ${fmtL(a.amt)} a ${a.client}.`, "neg");
     return;
@@ -1035,6 +1044,7 @@ function approveApp(id) {
     provAllocated: 0
   });
 
+  db.appHistory.push({...a,status:"Desembolsada"});
   db.apps.splice(idx, 1);
   logEvent(`Aprobado ${a.label} (Score ${a.score}) a ${a.client} por ${fmtL(a.amt)} al ${a.rate.toFixed(2)}%.`, "pos");
   renderAll();
@@ -1042,6 +1052,7 @@ function approveApp(id) {
 
 function rejectApp(id) {
   if (db.locked) return;
+  const rejected=db.apps.find(a=>a.id===id);if(rejected)db.appHistory.push({...rejected,status:"Rechazada"});
   db.apps = db.apps.filter(a => a.id !== id);
   renderAll();
 }
@@ -1050,7 +1061,7 @@ function approvePrimeClients() {
   if (db.locked) return;
   const prime = db.apps.filter(a => a.score >= 720);
   if (!prime.length) {
-    logEvent("No hay solicitudes con Score Equifax ≥ 720 pendientes.", "warn");
+    logEvent("No hay solicitudes con Score simulado ≥ 720 pendientes.", "warn");
     return;
   }
   prime.forEach(a => approveApp(a.id));
@@ -1136,7 +1147,9 @@ function attractDeposits(type, amt) {
 
 function processRemittances() {
   if (db.locked) return;
-  const fee = 950000;
+  if(db.remittanceQuota<=0){logEvent("No hay más lotes pendientes este trimestre.","warn");return;}
+  db.remittanceQuota--;
+  const fee=Math.round(db.clients*12);
   db.cashHnl += fee;
   postPL(fee, "fees", "Comisión Remesas y Transferencias");
   logEvent(`Lote de remesas y transferencias liquidado. Comisión: ${fmtL(fee)}.`, "pos");
@@ -1205,6 +1218,7 @@ function lendInterbank(amt) {
   }
   db.cashHnl -= amt;
   db.interbankLoans += amt;
+  db.contracts.push({amount:amt,rate:0.09,qLeft:2,bank:db.rivals[0]?.name||"Mercado simulado"});
   recordJournal("Colocación Mercado Interbancario", amt, amt);
   logEvent(`Colocados ${fmtL(amt)} en el Mercado Interbancario.`, "pos");
   renderAll();
@@ -1241,7 +1255,7 @@ function mergeWeakCompetitor() {
     status: "Vigente",
     provAllocated: 0
   });
-  db.rivals.splice(targetIdx, 1);
+  target.portfolio-=absorbLoans;target.stress=Math.max(10,target.stress-15);
   logEvent(`Fusión completada: absorbida cartera de ${fmtL(absorbLoans)} de ${target.name}.`, "pos");
   renderAll();
 }
@@ -1249,6 +1263,8 @@ function mergeWeakCompetitor() {
 function issueNewShares() {
   if (db.locked) return;
   const capAdd = 30000000;
+  if(db.capitalQuota<=0||db.paidCap+capAdd>db.capitalAuthorized||db.paidCap+db.retained<90000000){logEvent("No hay suscripción disponible.","warn");return;}
+  db.capitalQuota--;
   db.paidCap += capAdd;
   db.cashHnl += capAdd;
   db.shareholders += 15;
@@ -1300,7 +1316,7 @@ function openBranch() {
   db.cashHnl -= cost;
   db.fixedAssets += cost;
   db.branches += 1;
-  db.depQuotaLeft += 15000000;
+  // Cupo nuevo solo en el próximo trimestre.
   recordJournal("Apertura Agencia Bancaria", cost, cost);
   logEvent(`Agencia #${db.branches} inaugurada.`, "pos");
   renderAll();
@@ -1317,7 +1333,7 @@ function closeBranch() {
   db.branches -= 1;
   db.fixedAssets -= fixedCost;
   db.cashHnl += saleVal;
-  db.depQuotaLeft = Math.max(0, db.depQuotaLeft - 15000000);
+  db.depQuotaLeft = Math.min(db.depQuotaLeft,db.branches*30000000);
   postPL(saleVal - fixedCost, "opex", "Cierre y liquidación de agencia");
   logEvent(`Agencia cerrada: liquidada en ${fmtL(saleVal)}.`, "warn");
   renderAll();
@@ -1326,16 +1342,7 @@ function closeBranch() {
 function nextQuarter() {
   if (db.locked) return;
 
-  // Reiniciar estado de resultados del nuevo trimestre
-  db.pl = {
-    incLoans: 0,
-    incFees: 0,
-    expDep: 0,
-    expOpex: 0,
-    expProv: 0,
-    fxPnl: 0,
-    net: 0
-  };
+  // Acumular hasta el cierre efectivo.
 
   // 1. Variación cambiaria sobre posición en USD
   const prevFx = db.fxRate;
@@ -1354,6 +1361,8 @@ function nextQuarter() {
     postPL(ibInt, "loans", "Intereses colocación interbancaria");
   }
 
+  for(let i=db.contracts.length-1;i>=0;i--){const c=db.contracts[i];if(--c.qLeft<=0){db.cashHnl+=c.amount;db.interbankLoans-=c.amount;db.contracts.splice(i,1);logEvent("Vencimiento interbancario "+fmtL(c.amount),"pos");}}
+  simulateCards();
   // 3. Cobro de préstamos, mora y provisiones
   for (let i = db.loans.length - 1; i >= 0; i--) {
     const l = db.loans[i];
@@ -1375,7 +1384,7 @@ function nextQuarter() {
       l.qLeft -= 1;
       postPL(qInt, "loans", `Cobro intereses ${l.client}`);
 
-      if (l.qLeft <= 0 || l.bal <= 5) {
+      if (l.qLeft <= 0 || l.bal === 0) {
         db.loans.splice(i, 1);
       }
     } else {
@@ -1430,7 +1439,9 @@ function nextQuarter() {
   }
 
   db.depQuotaLeft = db.branches * 30000000;
-  db.refreshesLeft = 2;
+  db.refreshesLeft = 0;
+  db.remittanceQuota=Math.max(1,Math.floor(db.clients/1500));
+  db.capitalQuota=db.pl.net>0?1:0;
 
   // Evolución de bancos rivales
   db.rivals.forEach(r => {
@@ -1452,6 +1463,8 @@ function nextQuarter() {
 
   recomputeNetIncome();
 
+  db.periods.push({q:db.q,yr:db.yr,...db.pl});
+  db.pl=emptyPL();
   // Avanzar trimestre
   db.q += 1;
   if (db.q > 4) {
@@ -1478,7 +1491,7 @@ function nextQuarter() {
     logEvent("🚨 INTERVENCIÓN CNBS: PATRIMONIO O LIQUIDEZ EN NIVEL CRÍTICO. OPERACIONES BLOQUEADAS.", "neg");
     alert("¡El banco ha sido intervenido por la CNBS! Solo puedes iniciar una 'Nueva Partida'.");
   } else {
-    generateAppsList();
+    db.apps.forEach(a=>db.appHistory.push({...a,status:"Vencida"}));generateAppsList();
   }
 
   renderAll();
@@ -1493,7 +1506,7 @@ function renderTables() {
   if (!db.apps.length) {
     tbApps.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No hay solicitudes que cumplan los criterios actuales.</td></tr>`;
   } else {
-    db.apps.forEach(a => {
+    db.apps.filter(a => db.focus === "ALL" || a.seg === db.focus).forEach(a => {
       const mPct = (a.defProb * 100).toFixed(1) + "%";
       const cls = a.defProb > 0.12 ? "neg" : (a.defProb > 0.06 ? "warn" : "pos");
       const tierTxt = a.cardTier ? ` <span class="badge-seg">${a.cardTier}</span>` : "";
@@ -1712,6 +1725,7 @@ function renderAll() {
 
   renderTables();
   if (document.getElementById("t-graficos").classList.contains("active")) drawGraphs();
+  renderV5();
   saveGame();
 }
 
@@ -1790,6 +1804,7 @@ function plotSeries(canvasId, labels, series, unit, bg, fg, grid) {
 }
 
 function resetSim() {
+  if(!confirm("¿Iniciar nueva partida? La copia de v4 se conserva."))return;
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
   db = initialState();
   document.getElementById("rng-act-rate").value = db.actRate;
@@ -1798,14 +1813,37 @@ function resetSim() {
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("NUEVA PARTIDA BCH-98 PRO v4.0 INICIADA — BALANCE CUADRADO.", "pos");
+  logEvent("NUEVA PARTIDA BCH-98 PRO v5.0 — núcleo INICIADA — BALANCE CUADRADO.", "pos");
   generateAppsList();
   renderAll();
+}
+
+
+function emptyPL(){return {incLoans:0,incFees:0,expDep:0,expOpex:0,expProv:0,fxPnl:0,net:0}}
+function tierFloor(t){return ({Clásica:580,Oro:640,Platinum:700,Black:750})[t]||0}
+function simulateCards(){
+  for(let month=0;month<3;month++)for(const c of db.cards){
+    if(c.status!=="Activa")continue;
+    const purchase=Math.max(0,Math.min(c.limit-c.bal,Math.round(c.income*0.22),db.cashHnl));
+    db.cashHnl-=purchase;c.bal+=purchase;
+    const pay=Math.min(c.bal,Math.round(c.income*0.18));
+    db.cashHnl+=pay;c.bal-=pay;
+    const interest=Math.max(0,Math.min(c.limit-c.bal,Math.round(c.bal*c.rate/1200)));
+    c.bal+=interest;postPL(interest,"loans","Interés tarjeta "+c.client);
+  }
+}
+function renderV5(){
+  const el=document.getElementById("v5-panel");if(!el)return;
+  const last=db.periods.at(-1), y=db.periods.filter(p=>p.yr===db.yr).reduce((n,p)=>n+p.net,0)+db.pl.net;
+  const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+  el.innerHTML="<h3>Operaciones y cierres — parámetros simulados</h3><p>Remesas pendientes: "+db.remittanceQuota+" | Suscripciones disponibles: "+db.capitalQuota+" | Resultado anual: "+fmtL(y)+"</p><p>Último trimestre cerrado: "+(last?"T"+last.q+"-"+last.yr+" · "+fmtL(last.net):"Sin cierres")+"</p><h4>Tarjetas revolventes</h4><table><thead><tr><th>Cliente</th><th>Categoría</th><th>Score</th><th>Límite</th><th>Utilizado</th><th>Disponible</th></tr></thead><tbody>"+db.cards.map(c=>"<tr><td>"+esc(c.client)+"</td><td>"+esc(c.label)+"</td><td>"+c.score+"</td><td>"+fmtL(c.limit)+"</td><td>"+fmtL(c.bal)+"</td><td>"+fmtL(c.limit-c.bal)+"</td></tr>").join("")+"</tbody></table><h4>Contratos interbancarios</h4>"+db.contracts.map(c=>"<p>"+esc(c.bank)+" · "+fmtL(c.amount)+" · vence en "+c.qLeft+"T</p>").join("")+"<h4>Historial de cierres</h4>"+db.periods.slice(-8).reverse().map(p=>"<p>T"+p.q+"-"+p.yr+": "+fmtL(p.net)+"</p>").join("");
 }
 
 const saved = loadGame();
 if (saved) {
   db = Object.assign(initialState(), saved);
+  db.refreshesLeft=0;
+  if(db.interbankLoans>0&&!db.contracts.length)db.contracts.push({amount:db.interbankLoans,rate:0.09,qLeft:2,bank:"Contrato migrado"});
   document.getElementById("rng-act-rate").value = db.actRate;
   document.getElementById("rng-sav-rate").value = db.savRate;
   document.getElementById("rng-cd-rate").value = db.cdRate;
@@ -1814,10 +1852,10 @@ if (saved) {
   logEvent(`Partida v4.0 restaurada (T${db.q}-${db.yr}).`, "pos");
 } else {
   db = initialState();
-  logEvent("TERMINAL BCH-98 PRO v4.0 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  logEvent("TERMINAL BCH-98 PRO v5.0 — núcleo INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
 }
 
-if (!db.apps || db.apps.length === 0) {
+if (!saved) {
   generateAppsList();
 }
 renderAll();
