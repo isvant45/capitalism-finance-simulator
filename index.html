@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BCH-98 PRO v5.4 — modular — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
+<title>BCH-98 PRO v5.5 — modular — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
   <div class="title-bar">
-    <div>🏛️ BCH-98 PRO v5.4 — modular — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
+    <div>🏛️ BCH-98 PRO v5.5 — modular — Banca Personas, PyME, Empresarial, Tarjetas &amp; Score simulado</div>
     <div class="title-controls">
       <button onclick="setTheme('light')">Claro</button><button onclick="setTheme('dark')">Oscuro</button><button onclick="setTheme('retro')">Retro</button>
     </div>
@@ -287,7 +287,7 @@
               <table>
                 <tr><td>Caja &amp; Encaje (HNL)</td><td class="num mono" id="bs-cash-hnl">L 0</td></tr>
                 <tr><td>Disponibilidades USD (Val. Ref.)</td><td class="num mono" id="bs-cash-usd">L 0</td></tr>
-                <tr><td>Bonos gubernamentales</td><td class="num mono" id="bs-bonds">L 0</td></tr><tr><td>Colocaciones Interbancarias</td><td class="num mono" id="bs-interbank">L 0</td></tr>
+                <tr><td>Crédito mercantil (simulado)</td><td class="num mono" id="bs-goodwill">L 0.00</td></tr><tr><td>Bonos gubernamentales</td><td class="num mono" id="bs-bonds">L 0</td></tr><tr><td>Colocaciones Interbancarias</td><td class="num mono" id="bs-interbank">L 0</td></tr>
                 <tr><td>Cartera Préstamos Vigentes</td><td class="num mono pos" id="bs-loans-ok">L 0</td></tr>
                 <tr><td>Cartera en Mora</td><td class="num mono neg" id="bs-loans-bad">L 0</td></tr>
                 <tr><td><b>Activos Eventuales</b> (Adjudicados)</td><td class="num mono warn" id="bs-eventual">L 0</td></tr>
@@ -346,7 +346,7 @@
         </div>
       </div>
 
-<div class="tab-content win-outset" id="t-final"><div class="win-group"><strong>Supervisión simulada CNBS / BCH / FOSEDE</strong><div id="reg-summary"></div><button class="op-btn" onclick="inspectBank()">Inspección</button> <button id="rescue-btn" onclick="rescueBank()">Regularizar (aporte único condicionado)</button></div><div class="win-group"><strong>Agencias y talento humano</strong><div id="hr-list"></div><p><select id="hr-city"><option>San Pedro Sula</option><option>Choloma</option><option>Tegucigalpa</option><option>Puerto Cortés</option><option>La Ceiba</option><option>El Progreso</option><option>Comayagua</option><option>Villanueva</option><option>Santa Rosa de Copán</option><option>Choluteca</option></select> <button class="op-btn" onclick="openManagedBranch(document.getElementById('hr-city').value)">Abrir agencia L 4.5M</button></p><p><select id="hr-agency"></select> <select id="hr-role"><option>Cajero</option><option>Asesor</option><option>Analista</option><option>Gestor de cobros</option><option>Gerente</option><option>Auditor</option></select> <input type="number" id="hr-count" min="1" max="10" value="1"> <button class="op-btn" onclick="hireFromUI()">Contratar</button></p></div><div class="win-group" id="executive-metrics"></div></div><div class="tab-content win-outset" id="t-system"><div class="win-group"><h3>Partidas y respaldo</h3><p>Espacio 1 <button onclick="saveSlot(1)">Guardar</button> <button onclick="loadSlot(1)">Cargar</button></p><p>Espacio 2 <button onclick="saveSlot(2)">Guardar</button> <button onclick="loadSlot(2)">Cargar</button></p><p>Espacio 3 <button onclick="saveSlot(3)">Guardar</button> <button onclick="loadSlot(3)">Cargar</button></p><button onclick="exportGame()">Exportar JSON</button> <label>Importar JSON <input type="file" accept=".json" onchange="importGame(this)"></label><p>Los archivos se guardan localmente en este navegador.</p></div><div class="win-group"><h3>Suite de 20 pruebas</h3><button onclick="showFullTests()">Ejecutar pruebas (incluye diez años simulados)</button><div id="test-results"></div></div></div>
+<div class="tab-content win-outset" id="t-final"><div class="win-group"><strong>Supervisión simulada CNBS / BCH / FOSEDE</strong><div id="reg-summary"></div><button class="op-btn" onclick="inspectBank()">Inspección</button> <button id="rescue-btn" onclick="rescueBank()">Regularizar (aporte único condicionado)</button></div><div class="win-group"><strong>Agencias y talento humano</strong><div id="hr-list"></div><p><select id="hr-city"><option>San Pedro Sula</option><option>Choloma</option><option>Tegucigalpa</option><option>Puerto Cortés</option><option>La Ceiba</option><option>El Progreso</option><option>Comayagua</option><option>Villanueva</option><option>Santa Rosa de Copán</option><option>Choluteca</option></select> <button class="op-btn" onclick="openManagedBranch(document.getElementById('hr-city').value)">Abrir agencia L 4.5M</button></p><p><select id="hr-agency"></select> <select id="hr-role"><option>Cajero</option><option>Asesor</option><option>Analista</option><option>Gestor de cobros</option><option>Gerente</option><option>Auditor</option></select> <input type="number" id="hr-count" min="1" max="10" value="1"> <button class="op-btn" onclick="hireFromUI()">Contratar</button></p></div><div class="win-group" id="executive-metrics"></div></div><div class="tab-content win-outset" id="t-system"><div class="win-group"><h3>Partidas y respaldo</h3><p>Espacio 1 <button onclick="saveSlot(1)">Guardar</button> <button onclick="loadSlot(1)">Cargar</button></p><p>Espacio 2 <button onclick="saveSlot(2)">Guardar</button> <button onclick="loadSlot(2)">Cargar</button></p><p>Espacio 3 <button onclick="saveSlot(3)">Guardar</button> <button onclick="loadSlot(3)">Cargar</button></p><button onclick="exportGame()">Exportar JSON</button> <label>Importar JSON <input type="file" accept=".json" onchange="importGame(this)"></label><p>Los archivos se guardan localmente en este navegador.</p></div><div class="win-group"><h3>Suite ampliada y escenarios de estrés</h3><p><button class="op-btn" onclick="runEconomicScenario('FX_SHOCK')">Choque cambiario +6%</button> <button class="op-btn" onclick="runEconomicScenario('LIQUIDITY_RUN')">Retiro de depósitos</button> <button class="op-btn" onclick="runEconomicScenario('CREDIT_CRUNCH')">Crisis crediticia</button></p><p>Escenarios aplicados a la partida activa, una vez por trimestre y tipo.</p><button onclick="showFullTests()">Ejecutar pruebas (incluye diez años simulados)</button><div id="test-results"></div></div></div>
       <!-- TAB 5: GRÁFICOS RETRO -->
       <div class="tab-content win-outset" id="t-graficos">
         <div class="control-row" style="margin-bottom:4px;">
