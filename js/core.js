@@ -437,7 +437,7 @@ function approveApp(id,disburse=false) {
     const limit=god65()?a.amt:Math.min(a.amt,prod?.maxAmt??a.amt,Math.round(a.income*4));
     if(!cardEligible63(profile,prod,limit)){logEvent("Capacidad insuficiente para tarjeta.","warn");return;}
     if(limit<=0||(!god65()&&limit<(prod?.minAmt??0))){logEvent("Capacidad insuficiente para el límite mínimo de esta categoría. Considera una tarjeta inferior.","warn");return;}
-    if(db.cards.some(c=>c.customerId===a.customerId&&c.label===a.label&&!c.status.startsWith("Cancelada")))throw Error("Ya existe tarjeta activa de esta categoría");
+    if(!god65()&&db.cards.some(c=>c.customerId===a.customerId&&c.label===a.label&&!c.status.startsWith("Cancelada")))throw Error("Ya existe tarjeta activa de esta categoría");
     db.cards.push(initCard63({managed:true,id:a.id,customerId:a.customerId,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,brand:prod?.brand||"",reward:prod?.reward||"",annualFee:prod?.fee||0,status:"Activa"}));
     tx360(a,"Emisión tarjeta",0);
     db.appHistory.push({...a,status:"Línea aprobada"});
@@ -1194,7 +1194,7 @@ function resetSim() {
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("NUEVA PARTIDA Áureo Bank V6.5 INICIADA — BALANCE CUADRADO.", "pos");
+  logEvent("NUEVA PARTIDA Áureo Bank V6.6 INICIADA — BALANCE CUADRADO.", "pos");
   generateAppsList();
   renderAll();
 }
@@ -1302,7 +1302,7 @@ if (saved) {
   logEvent(`Partida restaurada (T${db.q}-${db.yr}).`, "pos");
 } else {
   db = initialState();
-  logEvent("Áureo Bank V6.5 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  logEvent("Áureo Bank V6.6 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
   if(saveBlocked64)logEvent("Partida anterior no válida: guardado automático suspendido. Consulta Configuración.","neg");
 }
 
