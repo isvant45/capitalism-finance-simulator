@@ -202,6 +202,7 @@ const CARD_CATALOG = [
   }
 ];
 const PRODUCTS = [
+ {seg:"PERSONAS",label:"Préstamo Personal",cardTier:null,minInc:12000,minAmt:10000,maxAmt:500000,minQ:2,maxQ:20,rateAdj:3,baseDef:.065,collateral:"Sin garantía real"},
   { seg: "PERSONAS", label: "Préstamo Vehicular", cardTier: null, minInc: 30000, minAmt: 650000, maxAmt: 3800000, minQ: 8, maxQ: 20, rateAdj: 1.0, baseDef: 0.055, collateral: "Vehículo (Prenda)" },
   { seg: "PERSONAS", label: "Crédito Hipotecario", cardTier: null, minInc: 55000, minAmt: 2500000, maxAmt: 16000000, minQ: 12, maxQ: 28, rateAdj: -1.0, baseDef: 0.04, collateral: "Bien Inmueble" },
   { seg: "PRIVADA", label: "Crédito con respaldo CDP", cardTier: null, minInc: 100000, minAmt: 1000000, maxAmt: 12000000, minQ: 4, maxQ: 12, rateAdj: -1, baseDef: 0.025, collateral: "Depósito pignorado simulado" },
@@ -341,7 +342,7 @@ function openTab(id, el) {
   document.getElementById(id).classList.add("active");
   el.classList.add("active");
   if (id === "t-graficos") drawGraphs();
-  updateBankRoute(id);
+  updateBankRoute(id);if(id==="t-customer360")renderCustomer360();
 }
 
 function changeFocus() {
@@ -435,16 +436,19 @@ function approveApp(id) {
   if (idx === -1) return;
   const a = db.apps[idx];
   ensureCustomers();const profile=customerFor(a);
+  if(profile){a.score=profile.score;a.income=profile.income;if(profile.seg!==a.seg){logEvent("Segmento modificado; crea una solicitud nueva.","warn");return;}}
   const prod=PRODUCTS.find(p=>p.label===a.label) || CARD_CATALOG.find(p=>p.cardTier===a.cardTier&&p.seg===a.seg);
   if (a.score<Math.max(db.minScore,prod?.minScore ?? tierFloor(a.cardTier)) || a.income<(prod?.minInc||0)) {logEvent("Solicitud no cumple ingreso mínimo o score simulado.","warn");return;}
   if(a.cardTier && a.label.includes("Tarjeta")){
     const limit=Math.min(a.amt,prod?.maxAmt??a.amt,Math.round(a.income*4));
+    if(profile?.manual&&money(limit*.05)>metrics360(profile).cap){logEvent("Capacidad insuficiente para tarjeta.","warn");return;}
     if(limit<=0||limit<(prod?.minAmt??0)){logEvent("Capacidad insuficiente para el límite mínimo de esta categoría. Considera una tarjeta inferior.","warn");return;}
     db.cards.push({id:a.id,customerId:a.customerId,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,brand:prod?.brand||"",reward:prod?.reward||"",annualFee:prod?.fee||0,status:"Activa"});
+    tx360(a,"Emisión tarjeta",0);
     db.appHistory.push({...a,status:"Línea aprobada"});
     db.apps.splice(idx,1);logEvent("Tarjeta emitida sin desembolso: "+fmtL(limit),"pos");renderAll();return;
   }
-  if(profile && (customerDebtPayment(profile)+a.amt/Math.max(1,a.q*3)+a.amt*a.rate/1200)>profile.income*.45){logEvent("Capacidad de pago insuficiente (45% simulado).","warn");return;}
+  if(profile && (a.amt/Math.max(1,a.q*3)+a.amt*a.rate/1200)>(profile.manual?metrics360(profile).cap:profile.income*.45-customerDebtPayment(profile))){logEvent("Capacidad de pago insuficiente (45% simulado).","warn");return;}
   if (db.cashHnl < a.amt) {
     logEvent(`Caja HNL insuficiente para desembolsar ${fmtL(a.amt)} a ${a.client}.`, "neg");
     return;
@@ -469,7 +473,8 @@ function approveApp(id) {
     provAllocated: 0
   });
 
-  db.appHistory.push({...a,status:"Desembolsada"});
+  tx360(a,"Desembolso",a.amt);tx360(a,"Comisión desembolso",fee,fee);
+ db.appHistory.push({...a,status:"Desembolsada"});
   db.apps.splice(idx, 1);
   logEvent(`Aprobado ${a.label} (Score ${a.score}) a ${a.client} por ${fmtL(a.amt)} al ${a.rate.toFixed(2)}%.`, "pos");
   renderAll();
@@ -1098,7 +1103,7 @@ function renderAll() {
   ensureCustomers();renderCustomers();renderCardOperations();
   renderCalendar();
   renderTrialBalance();
-  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();renderBankDashboard();
+  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();renderBankDashboard();renderCustomer360();
   document.getElementById("bs-goodwill").textContent=fmtL(db.goodwill||0);document.getElementById("bs-bonds").textContent=fmtL(db.govBonds);document.getElementById("bs-ib-borrow").textContent=fmtL(db.interbankBorrowed);
   document.querySelectorAll(".op-btn").forEach(b=>{if(db.locked)b.disabled=true;});
   saveGame();
@@ -1188,7 +1193,7 @@ function resetSim() {
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("NUEVA PARTIDA Áureo Bank V6.0 INICIADA — BALANCE CUADRADO.", "pos");
+  logEvent("NUEVA PARTIDA Áureo Bank V6.1 INICIADA — BALANCE CUADRADO.", "pos");
   generateAppsList();
   renderAll();
 }
@@ -1278,6 +1283,7 @@ const dailyTreasuryCycle=wrapOperation(treasuryDaily,"Revaluación diaria y venc
 newInterbank=wrapOperation(newInterbank,"Contrato interbancario");settleInterbank=wrapOperation(settleInterbank,"Liquidación interbancaria");bondTrade=wrapOperation(bondTrade,"Bonos");registerCollateral=wrapOperation(registerCollateral,"Registro garantía");makePortfolioOffer=wrapOperation(makePortfolioOffer,"Compra parcial cartera");seizeOrRecover=wrapOperation(recoverCollateral,"Recuperación vinculada");lendInterbank=(amount)=>newInterbank("LEND",amount,90);mergeWeakCompetitor=()=>{const i=db.rivals.findIndex(r=>r.stress>=55&&!db.deals.some(d=>d.name===r.name&&d.period===db.yr+"-"+db.q));if(i>=0)makePortfolioOffer(i);};
 openManagedBranch=wrapOperation(openManagedBranch,"Apertura agencia");closeManagedBranch=wrapOperation(closeManagedBranch,"Cierre agencia");hireManagedStaff=wrapOperation(hireManagedStaff,"Contratación");inspectBank=wrapOperation(inspectBank,"Inspección regulatoria");openBranch=()=>openManagedBranch(HR_CITIES[db.hrBranches.length%10]);closeBranch=()=>closeManagedBranch();
 placeAuctionBid=wrapOperation(placeAuctionBid,"Puja simulada");acquireBank=wrapOperation(acquireBank,"Adquisición integral simulada");runEconomicScenario=wrapOperation(runEconomicScenario,"Escenario económico");
+create360=wrapOperation(create360,"Alta cliente");edit360=wrapOperation(edit360,"Edición perfil");labor360=wrapOperation(labor360,"Escenario laboral");external360=wrapOperation(external360,"Deuda externa");closeExternal360=wrapOperation(closeExternal360,"Cancelación externa");doc360=wrapOperation(doc360,"KYC");request360=wrapOperation(request360,"Solicitud producto");
 const saved = loadGame();
 if (saved) {
   db = Object.assign(initialState(), saved);initAdvanced();migrateCents();
@@ -1291,7 +1297,7 @@ if (saved) {
   logEvent(`Partida restaurada (T${db.q}-${db.yr}).`, "pos");
 } else {
   db = initialState();
-  logEvent("Áureo Bank V6.0 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  logEvent("Áureo Bank V6.1 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
 }
 
 if (!saved) {
