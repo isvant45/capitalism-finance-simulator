@@ -285,7 +285,7 @@ function initialState() {
 }
 
 function saveGame() {
-  if (transactionActive) return;
+  if (transactionActive || testMode || batchMode) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
   } catch (e) {}
@@ -314,6 +314,7 @@ function fmtU(n) {
 }
 
 function logEvent(text, cls = "") {
+  if(testMode)return;
   const box = document.getElementById("ticker-log");
   const d = document.createElement("div");
   if (cls) d.className = cls;
@@ -539,6 +540,7 @@ function sellEventual(idx) {
 
 function attractDeposits(type, amt) {
   if (db.locked) return;
+  if(!["SAVINGS","CHECKING","CDP"].includes(type)||!Number.isSafeInteger(amt)||amt<=0)return;
   if (db.depQuotaLeft < amt) {
     logEvent(`Cupo comercial trimestral de captación agotado (${fmtL(db.depQuotaLeft)}).`, "warn");
     return;
@@ -800,7 +802,7 @@ function nextQuarter() {
   }
 
   // 7. Gastos operativos
-  const opex = db.branches * 1800000 + db.loans.length * 30000;
+  const opex = db.loans.length * 30000;
   db.cashHnl -= opex;
   postPL(-opex, "opex", "Gastos operativos y planilla agencias");
 
@@ -822,12 +824,7 @@ function nextQuarter() {
   const totDep = db.savingsDep + db.checkingDep + cdpVal;
   const encaje = totDep > 0 ? (db.cashHnl / totDep) * 100 : 100;
 
-  if (encaje < 15.0) {
-    const fine = Math.round(Math.max(500000, (totDep * 0.15 - db.cashHnl) * 0.05));
-    db.cashHnl -= fine;
-    postPL(-fine, "opex", "Multa CNBS por deficiencia de encaje");
-    logEvent(`CNBS: Encaje en ${encaje.toFixed(1)}% (<15%). Multa de ${fmtL(fine)}.`, "neg");
-  }
+  inspectBank();
 
   recomputeNetIncome();
 
@@ -855,10 +852,10 @@ function nextQuarter() {
   }
 
   if (eq <= 0 || db.cashHnl < -10000000) {
-    db.locked = true;
+    intervene("Patrimonio o liquidez crítica");
     logEvent("🚨 INTERVENCIÓN CNBS: PATRIMONIO O LIQUIDEZ EN NIVEL CRÍTICO. OPERACIONES BLOQUEADAS.", "neg");
-    alert("¡El banco ha sido intervenido por la CNBS! Solo puedes iniciar una 'Nueva Partida'.");
-  } else {
+    if(!testMode)logEvent("Revisa el módulo de regularización.","warn");
+  } else if(!db.locked) {
     db.apps.forEach(a=>db.appHistory.push({...a,status:"Vencida"}));generateAppsList();
   }
 
@@ -990,7 +987,8 @@ function renderTables() {
 }
 
 function renderAll() {
-  initTreasury();initRivals();
+  if(testMode||batchMode)return;
+  initTreasury();initRivals();initHR();initRegulation();
   clampProvisions();
   recomputeNetIncome();
 
@@ -1099,7 +1097,7 @@ function renderAll() {
   ensureCustomers();renderCustomers();renderCardOperations();
   renderCalendar();
   renderTrialBalance();
-  renderTreasury();renderMarket();renderCompetitors();
+  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();
   document.getElementById("bs-bonds").textContent=fmtL(db.govBonds);document.getElementById("bs-ib-borrow").textContent=fmtL(db.interbankBorrowed);
   document.querySelectorAll(".op-btn").forEach(b=>{if(db.locked)b.disabled=true;});
   saveGame();
@@ -1182,14 +1180,14 @@ function plotSeries(canvasId, labels, series, unit, bg, fg, grid) {
 function resetSim() {
   if(!confirm("¿Iniciar nueva partida? La copia de v4 se conserva."))return;
   try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-  db = initialState();
+  db = initialState();initTreasury();initRivals();initHR();initRegulation();
   document.getElementById("rng-act-rate").value = db.actRate;
   document.getElementById("rng-sav-rate").value = db.savRate;
   document.getElementById("rng-cd-rate").value = db.cdRate;
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("NUEVA PARTIDA BCH-98 PRO v5.0 — núcleo INICIADA — BALANCE CUADRADO.", "pos");
+  logEvent("NUEVA PARTIDA BCH-98 PRO v5.4 — modular INICIADA — BALANCE CUADRADO.", "pos");
   generateAppsList();
   renderAll();
 }
@@ -1246,14 +1244,14 @@ function renderCalendar(){
 }
 function advanceCalendarDays(days){
  if(db.locked||!Number.isInteger(days)||days<1||days>366)return;
- for(let i=0;i<days&&!db.locked;i++){
+ batchMode=true;try{for(let i=0;i<days&&!db.locked;i++){
    const d=currentCalendar();const oldMonth=d.getUTCMonth();d.setUTCDate(d.getUTCDate()+1);
    const dailyKey=d.toISOString().slice(0,10);dailyTreasuryCycle(dailyKey);if(db.lastTreasuryDay!==dailyKey)break;
    if(d.getUTCMonth()!==oldMonth){const key=d.toISOString().slice(0,7);monthlyBankCycle(key);if(db.lastMonthly!==key)break;}
    const y=d.getUTCFullYear(),q=Math.floor(d.getUTCMonth()/3)+1;
    if(q!==db.q||y!==db.yr){const prev=db.q+"-"+db.yr;nextQuarter();if(prev===db.q+"-"+db.yr)break;}
    db.calendarDate=d.toISOString().slice(0,10);
- }
+ }}finally{batchMode=false;}
  renderAll();
 }
 function closeCalendarQuarter(){const d=currentCalendar(),next=new Date(Date.UTC(db.yr,db.q*3,1));advanceCalendarDays(Math.round((next-d)/86400000));}
@@ -1273,10 +1271,11 @@ function renderTrialBalance(){
  const total=rows.reduce((s,r)=>s+r.saldo,0);
  el.innerHTML="<p>Saldo inicial reconstruido desde los movimientos registrados en v5.0; los períodos anteriores a esa versión no se reconstruyen individualmente.</p><table><thead><tr><th>Cuenta</th><th>Saldo inicial neto</th><th>Mov. Debe</th><th>Mov. Haber</th><th>Saldo deudor</th><th>Saldo acreedor</th></tr></thead><tbody>"+rows.map(r=>"<tr><td>"+r.name+"</td><td>"+fmtL(r.opening)+"</td><td>"+fmtL(r.deb)+"</td><td>"+fmtL(r.cred)+"</td><td>"+fmtL(Math.max(0,r.saldo))+"</td><td>"+fmtL(Math.max(0,-r.saldo))+"</td></tr>").join("")+"</tbody></table><p><strong>Diferencia de saldos: "+fmtL(total)+"</strong></p>";
 }
-const monthlyBankCycle=wrapOperation(function(key){if(db.lastMonthly===key)return;creditMonthly();cardsMonthly();treasuryMonthly();rivalsMonthly();db.lastMonthly=key;for(const p of db.profiles)p.creditAgeMonths++;},"Ciclo mensual crédito y tarjetas");
+const monthlyBankCycle=wrapOperation(function(key){if(db.lastMonthly===key)return;creditMonthly();cardsMonthly();treasuryMonthly();rivalsMonthly();hrMonthly();db.lastMonthly=key;for(const p of db.profiles)p.creditAgeMonths++;},"Ciclo mensual crédito y tarjetas");
 markCreditArrears=wrapOperation(markCreditArrears,"Mora");refinanceCredit=wrapOperation(refinanceCredit,"Refinanciamiento");settleCredit=wrapOperation(settleCredit,"Cancelación crédito");cardSpend=wrapOperation(cardSpend,"Consumo tarjeta");cardPay=wrapOperation(cardPay,"Pago tarjeta");cardBlock=wrapOperation(cardBlock,"Bloqueo tarjeta");
 const dailyTreasuryCycle=wrapOperation(treasuryDaily,"Revaluación diaria y vencimientos");
 newInterbank=wrapOperation(newInterbank,"Contrato interbancario");settleInterbank=wrapOperation(settleInterbank,"Liquidación interbancaria");bondTrade=wrapOperation(bondTrade,"Bonos");registerCollateral=wrapOperation(registerCollateral,"Registro garantía");makePortfolioOffer=wrapOperation(makePortfolioOffer,"Compra parcial cartera");seizeOrRecover=wrapOperation(recoverCollateral,"Recuperación vinculada");lendInterbank=(amount)=>newInterbank("LEND",amount,90);mergeWeakCompetitor=()=>{const i=db.rivals.findIndex(r=>r.stress>=55&&!db.deals.some(d=>d.name===r.name&&d.period===db.yr+"-"+db.q));if(i>=0)makePortfolioOffer(i);};
+openManagedBranch=wrapOperation(openManagedBranch,"Apertura agencia");closeManagedBranch=wrapOperation(closeManagedBranch,"Cierre agencia");hireManagedStaff=wrapOperation(hireManagedStaff,"Contratación");inspectBank=wrapOperation(inspectBank,"Inspección regulatoria");openBranch=()=>openManagedBranch(HR_CITIES[db.hrBranches.length%10]);closeBranch=()=>closeManagedBranch();
 const saved = loadGame();
 if (saved) {
   db = Object.assign(initialState(), saved);
@@ -1290,7 +1289,7 @@ if (saved) {
   logEvent(`Partida v4.0 restaurada (T${db.q}-${db.yr}).`, "pos");
 } else {
   db = initialState();
-  logEvent("TERMINAL BCH-98 PRO v5.0 — núcleo INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  logEvent("TERMINAL BCH-98 PRO v5.4 — modular INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
 }
 
 if (!saved) {
