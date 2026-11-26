@@ -44,11 +44,11 @@ function getAuditImbalance() {
   const evVal = db.eventualAssets.reduce((s, e) => s + e.bookVal, 0);
   const usdHnl = Math.round(db.usdBalance * db.fxRate);
   const cardBal=(db.cards||[]).reduce((s,c)=>s+c.bal,0);
-  const totAssets = db.cashHnl + usdHnl + db.interbankLoans + okLoans + badLoans + cardBal + evVal - db.provisions + db.fixedAssets;
+  const totAssets = db.cashHnl + usdHnl + db.interbankLoans + okLoans + badLoans + cardBal + evVal - db.provisions + db.fixedAssets + (db.govBonds||0);
 
   const cdpVal = db.cdps.reduce((s, c) => s + c.amount, 0);
   const totDep = db.savingsDep + db.checkingDep + cdpVal;
-  const totLiab = totDep + db.rediscount;
+  const totLiab = totDep + db.rediscount + (db.interbankBorrowed||0);
   const eq = db.paidCap + db.retained;
   const totLP = totLiab + eq;
 
@@ -67,4 +67,4 @@ function getAuditImbalance() {
   };
 }
 
-function balanceAccounts(){return {"1101 Caja HNL":db.cashHnl,"1102 Caja USD":Math.round(db.usdBalance*db.fxRate),"1201 Interbancario":db.interbankLoans,"1301 Cartera créditos":db.loans.reduce((s,l)=>s+l.bal,0),"1302 Tarjetas":db.cards.reduce((s,c)=>s+c.bal,0),"1401 Adjudicados":db.eventualAssets.reduce((s,e)=>s+e.bookVal,0),"1501 Activos fijos":db.fixedAssets,"1399 Provisiones":-db.provisions,"2101 Ahorro":-db.savingsDep,"2102 Cheques":-db.checkingDep,"2103 CDP":-db.cdps.reduce((s,c)=>s+c.amount,0),"2201 Redescuento":-db.rediscount,"3101 Capital":-db.paidCap,"3201 Resultados acumulados":-db.retained}}
+function balanceAccounts(){return {"1101 Caja HNL":db.cashHnl,"1102 Caja USD":Math.round(db.usdBalance*db.fxRate),"1201 Interbancario":db.interbankLoans,"1202 Bonos":db.govBonds||0,"1301 Cartera créditos":db.loans.reduce((s,l)=>s+l.bal,0),"1302 Tarjetas":db.cards.reduce((s,c)=>s+c.bal,0),"1401 Adjudicados":db.eventualAssets.reduce((s,e)=>s+e.bookVal,0),"1501 Activos fijos":db.fixedAssets,"1399 Provisiones":-db.provisions,"2101 Ahorro":-db.savingsDep,"2102 Cheques":-db.checkingDep,"2103 CDP":-db.cdps.reduce((s,c)=>s+c.amount,0),"2201 Redescuento":-db.rediscount,"2202 Fondeo interbancario":-(db.interbankBorrowed||0),"3101 Capital":-db.paidCap,"3201 Resultados acumulados":-db.retained}}
