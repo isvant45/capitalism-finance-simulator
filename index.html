@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BCH-98 PRO — Simulador Bancario Integral (Banca HN & Corporativa)</title>
+<title>BCH-98 PRO v3.1 — Simulador Bancario Integral (Motor Contable Corregido)</title>
 <style>
   :root {
     --bg-desktop: #008080;
@@ -65,7 +65,6 @@
     font-family: "Lucida Console", "Courier New", monospace;
   }
 
-  /* Biselado retro 1995-1999 */
   .win-outset {
     background: var(--win-bg);
     border-top: 2px solid var(--win-light);
@@ -117,12 +116,12 @@
 
   .title-controls {
     display: flex;
-    gap: 3px;
+    gap: 4px;
     align-items: center;
   }
 
   .title-controls button {
-    padding: 1px 6px;
+    padding: 2px 7px;
     font-size: 11px;
   }
 
@@ -353,7 +352,7 @@
 <div class="win-outset" id="app-root">
   <!-- BARRA DE TÍTULO -->
   <div class="title-bar">
-    <div>🏛️ BCH-98 PRO — Banca Comercial, Privada, PyME, Corporativa &amp; Mesa de Divisas (HN)</div>
+    <div>🏛️ BCH-98 PRO v3.1 — Banca Comercial, Privada, PyME, Corporativa &amp; Mesa de Divisas (HN)</div>
     <div class="title-controls">
       <button onclick="toggleTheme()" id="btn-theme">🌙 Modo Oscuro</button>
     </div>
@@ -383,7 +382,7 @@
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Caja &amp; Encaje (HNL)</div>
-      <div class="kpi-val mono" id="kpi-cash-hnl">L 180,000,000</div>
+      <div class="kpi-val mono" id="kpi-cash-hnl">L 284,300,000</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Posición Divisas (USD)</div>
@@ -411,9 +410,9 @@
   <div style="padding: 6px 8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; border-bottom: 1px solid var(--win-dark);">
     <button class="btn-go" onclick="nextQuarter()">⏩ CERRAR TRIMESTRE (Simular)</button>
     <button onclick="approveLowRisk()">⚡ Aprobar Riesgo Bajo (&lt; 6%)</button>
-    <button onclick="requestRediscount()">🏛️ Redescuento B. Central (+L 20M)</button>
+    <button onclick="requestRediscount()">🏛️ Redescuento BCH (+L 20M)</button>
     <button onclick="repayRediscount()">💳 Pagar Redescuento (-L 20M)</button>
-    <button onclick="resetSim()" style="margin-left:auto;">🔄 Reiniciar</button>
+    <button onclick="resetSim()" style="margin-left:auto;">🔄 Nueva Partida</button>
   </div>
 
   <!-- CUERPO PRINCIPAL -->
@@ -467,10 +466,11 @@
         <div class="win-inset" style="padding:5px;">
           <table>
             <tr><td>(+) Intereses Cartera &amp; Tarjetas</td><td class="num mono pos" id="pl-inc-loans">L 0</td></tr>
-            <tr><td>(+) Comisiones, FX &amp; Cartas Créd.</td><td class="num mono pos" id="pl-inc-fees">L 0</td></tr>
-            <tr><td>(-) Intereses Ahorro, Cheques &amp; CDP</td><td class="num mono neg" id="pl-exp-dep">L 0</td></tr>
+            <tr><td>(+) Comisiones y FX Neto</td><td class="num mono pos" id="pl-inc-fees">L 0</td></tr>
+            <tr><td>(-) Intereses Pasivos &amp; Redescuento</td><td class="num mono neg" id="pl-exp-dep">L 0</td></tr>
             <tr><td>(-) Gastos Agencias &amp; Operación</td><td class="num mono neg" id="pl-exp-opex">L 0</td></tr>
-            <tr><td>(-) Provisiones &amp; Castigos Mora</td><td class="num mono neg" id="pl-exp-prov">L 0</td></tr>
+            <tr><td>(-) Provisiones &amp; Ajustes Mora</td><td class="num mono neg" id="pl-exp-prov">L 0</td></tr>
+            <tr><td>(+/-) Resultado Cambiario USD</td><td class="num mono" id="pl-fx-pnl">L 0</td></tr>
             <tr style="border-top:2px solid var(--win-dark); font-weight:bold;">
               <td>UTILIDAD NETA TRIM.</td>
               <td class="num mono" id="pl-net">L 0</td>
@@ -537,15 +537,15 @@
       <div class="tab-content win-outset" id="t-captacion">
         <div class="grid-2">
           <div class="win-group">
-            <div class="win-group-title">Captación de Fondos (Pasivos)</div>
+            <div class="win-group-title">Captación de Fondos (Cupo Trimestral)</div>
             <p style="margin-top:0; color:var(--text-muted);">
-              Atrae depósitos de clientes y Banca Privada. Los <b>CD / CDP</b> dan liquidez estable a plazo, pero pagan mayor interés.
+              Cupo comercial restante este trimestre: <strong class="mono" id="lbl-dep-quota">L 0</strong>. Al vencer un CDP, se paga el capital al cliente desde caja.
             </p>
             <div style="display:flex; flex-direction:column; gap:6px;">
-              <button onclick="attractDeposits('SAVINGS', 15000000)">+ Campaña Cuenta de Ahorro (L 15M)</button>
-              <button onclick="attractDeposits('CHECKING', 20000000)">+ Captar Cuentas de Cheques Empresariales (L 20M)</button>
-              <button onclick="attractDeposits('CDP', 25000000)">+ Emitir CDP Banca Privada a 4 Trimestres (L 25M)</button>
-              <button onclick="attractDeposits('CDP', 50000000)">+ Emitir CDP Corporativo a 8 Trimestres (L 50M)</button>
+              <button onclick="attractDeposits('SAVINGS', 15000000)">+ Captar Cuenta de Ahorro (L 15M)</button>
+              <button onclick="attractDeposits('CHECKING', 20000000)">+ Captar Cuentas de Cheques (L 20M)</button>
+              <button onclick="attractDeposits('CDP', 25000000)">+ Emitir CDP Banca Privada 4T (L 25M)</button>
+              <button onclick="attractDeposits('CDP', 50000000)">+ Emitir CDP Corporativo 8T (L 50M)</button>
             </div>
           </div>
 
@@ -583,7 +583,7 @@
           <div class="win-group">
             <div class="win-group-title">Mesa de Subasta de Divisas (USD / HNL)</div>
             <p style="margin-top:0; color:var(--text-muted);">
-              Participa en la subasta de divisas y operaciones con corresponsales internacionales. Cobras comisión cambiaria del 1.2%.
+              Comisión cambiaria neta del 1.2%. La variación del tipo de cambio en cada cierre trimestral se contabiliza como ganancia o pérdida cambiaria.
             </p>
             <div class="win-inset" style="padding:6px; margin-bottom:8px;">
               <div>Tipo de Cambio Referencial: <strong class="mono" id="fx-spot">L 24.75 / $1</strong></div>
@@ -601,7 +601,7 @@
           <div class="win-group">
             <div class="win-group-title">Banca Corporativa e Internacional</div>
             <p style="margin-top:0; color:var(--text-muted);">
-              Emite Cartas de Crédito para importadores/exportadores y gestiona líneas de corresponsalía internacional.
+              Cupo de Cartas de Crédito este trimestre: <strong class="mono" id="lbl-lc-quota">3 operaciones</strong>.
             </p>
             <div style="display:flex; flex-direction:column; gap:6px;">
               <button onclick="issueLetterOfCredit()">📄 Emitir Carta de Crédito Importación (Comisión L 1.2M)</button>
@@ -635,7 +635,7 @@
               <table>
                 <tr><td>Depósitos Ahorro + Cheques</td><td class="num mono" id="bs-dep-liq">L 0</td></tr>
                 <tr><td>Certificados de Depósito (CD / CDP)</td><td class="num mono" id="bs-dep-cdp">L 0</td></tr>
-                <tr><td>Redescuento Banco Central</td><td class="num mono neg" id="bs-rediscount">L 0</td></tr>
+                <tr><td>Redescuento BCH (Límite 50% Pat.)</td><td class="num mono neg" id="bs-rediscount">L 0</td></tr>
                 <tr style="border-top:1px solid var(--win-dark); font-weight:bold;">
                   <td>TOTAL PASIVOS</td>
                   <td class="num mono" id="bs-tot-liab">L 0</td>
@@ -677,7 +677,7 @@
         <canvas id="cv-main" width="760" height="220" style="width:100%; height:220px; display:block; border:2px inset var(--win-dark);"></canvas>
 
         <div class="control-row" style="margin:10px 0 4px 0;">
-          <strong>Historial de Tasas (%) &amp; Tipo de Cambio (L/USD)</strong>
+          <strong>Historial de Tasas (%)</strong>
           <span class="mono" style="font-size:11px;">
             <span class="neg">■ Tasa Activa</span> ·
             <span class="pos">■ Tasa CDP</span> ·
@@ -697,8 +697,10 @@
 </div>
 
 <script>
+const STORAGE_KEY = "bch98_pro_v31_save";
+
 const PRODUCTS = [
-  { code: "AHORRO/PERS", seg: "MASIVA", label: "Préstamo Personal", minAmt: 150000, maxAmt: 1200000, minQ: 4, maxQ: 12, rateAdj: 3.5, baseDef: 0.08, collateral: "Aval / Nómina" },
+  { code: "PERSONAL", seg: "MASIVA", label: "Préstamo Personal", minAmt: 150000, maxAmt: 1200000, minQ: 4, maxQ: 12, rateAdj: 3.5, baseDef: 0.08, collateral: "Aval / Nómina" },
   { code: "VEHICULAR", seg: "MASIVA", label: "Préstamo Vehicular", minAmt: 600000, maxAmt: 3500000, minQ: 8, maxQ: 20, rateAdj: 1.5, baseDef: 0.06, collateral: "Vehículo (Prenda)" },
   { code: "TARJETA", seg: "MASIVA", label: "Línea Tarjeta Crédito", minAmt: 100000, maxAmt: 800000, minQ: 4, maxQ: 8, rateAdj: 11.0, baseDef: 0.14, collateral: "Quirografario" },
   { code: "PRIVADA_CRED", seg: "PRIVADA", label: "Crédito Respaldo CDP", minAmt: 3000000, maxAmt: 18000000, minQ: 4, maxQ: 12, rateAdj: -1.0, baseDef: 0.02, collateral: "Depósito Pignorado" },
@@ -716,6 +718,11 @@ const NAMES = [
 let db;
 
 function initialState() {
+  // Cuadre inicial exacto:
+  // Activos: cashHnl (284,300,000) + usdBalance (1,200,000 * 24.75 = 29,700,000) + fixedAssets (36,000,000) = 350,000,000
+  // Pasivos: savingsDep (95,000,000) + checkingDep (65,000,000) + CDP (40,000,000) = 200,000,000
+  // Patrimonio: paidCap (120,000,000) + retained (30,000,000) = 150,000,000
+  // Pasivos + Patrimonio = 350,000,000
   return {
     q: 1,
     yr: 1999,
@@ -729,7 +736,7 @@ function initialState() {
     branches: 3,
     paidCap: 120000000,
     retained: 30000000,
-    cashHnl: 180000000,
+    cashHnl: 284300000,
     usdBalance: 1200000,
     fixedAssets: 36000000,
     savingsDep: 95000000,
@@ -737,6 +744,8 @@ function initialState() {
     cdps: [
       { id: 1, name: "CDP Banca Privada #101", amount: 40000000, rate: 7.5, qLeft: 4 }
     ],
+    depQuotaLeft: 90000000,
+    lcQuotaLeft: 3,
     rediscount: 0,
     provisions: 0,
     reputation: 80,
@@ -750,6 +759,7 @@ function initialState() {
       expDep: 0,
       expOpex: 0,
       expProv: 0,
+      fxPnl: 0,
       net: 0
     },
     hist: {
@@ -763,6 +773,26 @@ function initialState() {
     },
     locked: false
   };
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  } catch (e) {
+    // Ignorar errores de cuota si el navegador restringe localStorage
+  }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed.cashHnl !== "number") return null;
+    return parsed;
+  } catch (e) {
+    return null;
+  }
 }
 
 function fmtL(n) {
@@ -784,6 +814,27 @@ function logEvent(text, cls = "") {
   box.scrollTop = box.scrollHeight;
 }
 
+// Aplica un impacto directo en utilidades retenidas y en el estado de resultados trimestral
+function applyIncomeImpact(delta, bucket) {
+  db.retained += delta;
+  if (bucket === "fees") db.pl.incFees += delta;
+  else if (bucket === "prov") db.pl.expProv += (-delta);
+  else if (bucket === "fx") db.pl.fxPnl += delta;
+  else if (bucket === "loans") db.pl.incLoans += delta;
+  else if (bucket === "dep") db.pl.expDep += (-delta);
+  else if (bucket === "opex") db.pl.expOpex += (-delta);
+}
+
+function clampProvisionsToLoans() {
+  const totalLoans = db.loans.reduce((s, l) => s + l.bal, 0);
+  if (db.provisions > totalLoans) {
+    db.provisions = totalLoans;
+  }
+  if (db.provisions < 0) {
+    db.provisions = 0;
+  }
+}
+
 function toggleTheme() {
   document.body.classList.toggle("dark-mode");
   const isDark = document.body.classList.contains("dark-mode");
@@ -803,6 +854,7 @@ function changeFocus() {
   db.focus = document.getElementById("sel-focus").value;
   refreshApps();
   logEvent(`Enfoque comercial cambiado a: ${document.getElementById("sel-focus").selectedOptions[0].text}`);
+  saveGame();
 }
 
 function syncControls() {
@@ -858,11 +910,12 @@ function approveApp(id) {
     return;
   }
 
+  // Desembolso de principal (reduce caja, sube cartera en mismo monto -> balance neutro)
   db.cashHnl -= a.amt;
-  const fee = a.amt * 0.015;
+  // Comisión de apertura (entra a caja y a utilidad por comisiones)
+  const fee = Math.round(a.amt * 0.015);
   db.cashHnl += fee;
-  db.retained += fee;
-  db.pl.incFees += fee;
+  applyIncomeImpact(fee, "fees");
 
   db.loans.push({
     id: a.id,
@@ -873,7 +926,8 @@ function approveApp(id) {
     rate: a.rate,
     qLeft: a.q,
     defProb: a.defProb,
-    status: "Vigente"
+    status: "Vigente",
+    provAllocated: 0
   });
 
   db.apps.splice(idx, 1);
@@ -884,6 +938,7 @@ function approveApp(id) {
 function rejectApp(id) {
   db.apps = db.apps.filter(a => a.id !== id);
   renderTables();
+  saveGame();
 }
 
 function approveLowRisk() {
@@ -900,22 +955,32 @@ function seizeOrRecover(id) {
   if (idx === -1) return;
   const l = db.loans[idx];
 
+  // Liberar provisión previamente constituida para este crédito
+  const releasedProv = Math.min(db.provisions, l.provAllocated || 0);
+  db.provisions -= releasedProv;
+
   if (l.label.includes("Hipotecario") || l.label.includes("Vehicular")) {
-    const val = Math.round(l.bal * 0.65);
+    const bookVal = Math.round(l.bal * 0.65);
+    const netLoss = bookVal - l.bal; // Negativo si el bien adjudicado vale menos que el saldo
     db.eventualAssets.push({
       id: Date.now() + Math.random(),
       title: l.label.includes("Hipotecario") ? `Inmueble Adjudicado (${l.name})` : `Vehículo Adjudicado (${l.name})`,
       origin: l.label,
-      bookVal: val
+      bookVal
     });
-    logEvent(`Adjudicado a Activo Eventual: ${l.name} por ${fmtL(val)}.`, "warn");
+    // Ajuste contable: sube activo eventual en bookVal, baja préstamo en l.bal, compensa provisión liberada
+    applyIncomeImpact(netLoss + releasedProv, "prov");
+    logEvent(`Adjudicado a Activo Eventual: ${l.name} por ${fmtL(bookVal)} (Saldo ${fmtL(l.bal)}).`, "warn");
   } else {
     const rec = Math.round(l.bal * 0.30);
     db.cashHnl += rec;
-    db.retained += rec;
-    logEvent(`Recuperación parcial de cartera castigada (${l.name}): ${fmtL(rec)}.`);
+    const netLoss = rec - l.bal; // Pérdida neta por castigo de crédito no garantizado
+    applyIncomeImpact(netLoss + releasedProv, "prov");
+    logEvent(`Castigo y recuperación parcial (${l.name}): Recibido ${fmtL(rec)} de ${fmtL(l.bal)}.`, "warn");
   }
+
   db.loans.splice(idx, 1);
+  clampProvisionsToLoans();
   renderAll();
 }
 
@@ -925,16 +990,22 @@ function sellEventual(idx) {
   const sale = Math.round(item.bookVal * 0.92);
   const diff = sale - item.bookVal;
   db.cashHnl += sale;
-  db.retained += diff;
-  db.pl.incFees += diff;
+  applyIncomeImpact(diff, "fees");
   db.eventualAssets.splice(idx, 1);
-  logEvent(`Vendido Activo Eventual (${item.title}) por ${fmtL(sale)}.`, diff >= 0 ? "pos" : "warn");
+  logEvent(`Vendido Activo Eventual (${item.title}) por ${fmtL(sale)} (${diff >= 0 ? "+" : ""}${fmtL(diff)}).`, diff >= 0 ? "pos" : "warn");
   renderAll();
 }
 
 function attractDeposits(type, amt) {
   if (db.locked) return;
+  if (db.depQuotaLeft < amt) {
+    logEvent(`Cupo comercial trimestral de captación agotado (Restante: ${fmtL(db.depQuotaLeft)}).`, "warn");
+    return;
+  }
+
+  db.depQuotaLeft -= amt;
   db.cashHnl += amt;
+
   if (type === "SAVINGS") {
     db.savingsDep += amt;
     db.clients += 180;
@@ -961,40 +1032,47 @@ function tradeFX(side, usdAmt) {
   if (db.locked) return;
   const spread = 0.18;
   const commRate = 0.012;
+
   if (side === "BUY") {
-    const costHnl = usdAmt * (db.fxRate + spread);
-    const comm = costHnl * commRate;
+    const fxPrice = db.fxRate + spread;
+    const costHnl = Math.round(usdAmt * fxPrice);
+    const comm = Math.round(costHnl * commRate);
     if (db.cashHnl < costHnl + comm) {
       logEvent("Fondos HNL insuficientes para comprar dólares en subasta.", "neg");
       return;
     }
     db.cashHnl -= (costHnl + comm);
     db.usdBalance += usdAmt;
-    db.retained += comm;
-    db.pl.incFees += comm;
-    logEvent(`Subasta FX: Comprados ${fmtU(usdAmt)} a L ${(db.fxRate + spread).toFixed(2)}.`, "pos");
+    // La comisión cobrada al cliente es ingreso; el spread sobre el spot se refleja en valuación/posición
+    applyIncomeImpact(comm, "fees");
+    logEvent(`Subasta FX: Comprados ${fmtU(usdAmt)} a L ${fxPrice.toFixed(2)} (Comisión ${fmtL(comm)}).`, "pos");
   } else {
     if (db.usdBalance < usdAmt) {
       logEvent("Saldo en USD insuficiente para vender en subasta.", "neg");
       return;
     }
-    const grossHnl = usdAmt * (db.fxRate - spread);
-    const comm = grossHnl * commRate;
+    const fxPrice = db.fxRate - spread;
+    const grossHnl = Math.round(usdAmt * fxPrice);
+    const comm = Math.round(grossHnl * commRate);
+    const netHnl = grossHnl - comm;
     db.usdBalance -= usdAmt;
-    db.cashHnl += (grossHnl - comm);
-    db.retained += comm;
-    db.pl.incFees += comm;
-    logEvent(`Subasta FX: Vendidos ${fmtU(usdAmt)} a L ${(db.fxRate - spread).toFixed(2)}.`, "pos");
+    db.cashHnl += netHnl;
+    applyIncomeImpact(comm, "fees");
+    logEvent(`Subasta FX: Vendidos ${fmtU(usdAmt)} a L ${fxPrice.toFixed(2)} (Ingreso neto ${fmtL(netHnl)}).`, "pos");
   }
   renderAll();
 }
 
 function issueLetterOfCredit() {
   if (db.locked) return;
+  if (db.lcQuotaLeft <= 0) {
+    logEvent("Cupo trimestral de Cartas de Crédito corporativas agotado.", "warn");
+    return;
+  }
+  db.lcQuotaLeft -= 1;
   const fee = 1200000;
   db.cashHnl += fee;
-  db.retained += fee;
-  db.pl.incFees += fee;
+  applyIncomeImpact(fee, "fees");
   db.reputation = Math.min(100, db.reputation + 1);
   logEvent(`Carta de Crédito Internacional emitida. Comisión ganada: ${fmtL(fee)}.`, "pos");
   renderAll();
@@ -1015,25 +1093,39 @@ function payDividend() {
   renderAll();
 }
 
+function getMaxRediscount() {
+  const eq = Math.max(0, db.paidCap + db.retained);
+  return Math.round(eq * 0.50);
+}
+
 function requestRediscount() {
+  if (db.locked) return;
   const amt = 20000000;
+  const maxAllowed = getMaxRediscount();
+  if (db.rediscount + amt > maxAllowed) {
+    logEvent(`Límite de redescuento BCH alcanzado (Máx ${fmtL(maxAllowed)} = 50% del Patrimonio).`, "neg");
+    return;
+  }
   db.cashHnl += amt;
   db.rediscount += amt;
   db.reputation = Math.max(10, db.reputation - 3);
-  logEvent(`Redescuento Banco Central recibido: +${fmtL(amt)} (Tasa TPM + 2.5%).`, "warn");
+  logEvent(`Redescuento BCH recibido: +${fmtL(amt)} (Tasa TPM + 2.5%).`, "warn");
   renderAll();
 }
 
 function repayRediscount() {
   const pay = Math.min(20000000, db.rediscount);
-  if (pay <= 0) return;
+  if (pay <= 0) {
+    logEvent("No hay saldo pendiente de redescuento con el BCH.");
+    return;
+  }
   if (db.cashHnl < pay) {
     logEvent("Caja HNL insuficiente para abonar al redescuento.", "neg");
     return;
   }
   db.cashHnl -= pay;
   db.rediscount -= pay;
-  logEvent(`Abonado al redescuento Banco Central: -${fmtL(pay)}.`, "pos");
+  logEvent(`Abonado al redescuento BCH: -${fmtL(pay)}.`, "pos");
   renderAll();
 }
 
@@ -1047,8 +1139,9 @@ function openBranch() {
   db.cashHnl -= cost;
   db.fixedAssets += cost;
   db.branches += 1;
+  db.depQuotaLeft += 25000000;
   db.reputation = Math.min(100, db.reputation + 2);
-  logEvent(`Nueva agencia inaugurada (#${db.branches}). Más captación y colocación.`, "pos");
+  logEvent(`Nueva agencia inaugurada (#${db.branches}). Cupo captación +L 25M.`, "pos");
   renderAll();
 }
 
@@ -1059,103 +1152,137 @@ function closeBranch() {
   }
   db.branches -= 1;
   db.fixedAssets -= 12000000;
-  db.cashHnl += 9000000;
-  db.retained -= 3000000;
-  logEvent("Agencia cerrada y liquidada por L 9,000,000.", "warn");
+  const salePrice = 9000000;
+  const loss = salePrice - 12000000;
+  db.cashHnl += salePrice;
+  applyIncomeImpact(loss, "opex");
+  logEvent(`Agencia cerrada: liquidada en ${fmtL(salePrice)} (Pérdida ${fmtL(loss)}).`, "warn");
   renderAll();
 }
 
 function nextQuarter() {
   if (db.locked) return;
 
-  let incLoans = 0;
-  let incFees = db.pl.incFees;
-  let expDep = 0;
-  let expOpex = 0;
-  let expProv = 0;
+  // Reiniciar estado de resultados del nuevo trimestre
+  db.pl = {
+    incLoans: 0,
+    incFees: 0,
+    expDep: 0,
+    expOpex: 0,
+    expProv: 0,
+    fxPnl: 0,
+    net: 0
+  };
 
-  // Evolución macro y tipo de cambio
-  db.fxRate = +(db.fxRate * (1 + (Math.random() * 0.024 - 0.006))).toFixed(2);
+  // 1. Variación del tipo de cambio y contabilización de ganancia/pérdida cambiaria sobre USD
+  const prevFx = db.fxRate;
+  const nextFx = +(prevFx * (1 + (Math.random() * 0.024 - 0.008))).toFixed(2);
+  const fxDelta = nextFx - prevFx;
+  const fxGainLoss = Math.round(db.usdBalance * fxDelta);
+  db.fxRate = nextFx;
+  if (fxGainLoss !== 0) {
+    applyIncomeImpact(fxGainLoss, "fx");
+    logEvent(`Variación FX (${prevFx.toFixed(2)} -> ${nextFx.toFixed(2)}): Resultado cambiario ${fmtL(fxGainLoss)}.`, fxGainLoss >= 0 ? "pos" : "warn");
+  }
+
+  // Evolución de Tasa de Política Monetaria
   db.tpm = Math.max(3.5, Math.min(12.0, +(db.tpm + (Math.random() * 0.8 - 0.35)).toFixed(2)));
 
-  // Cobro de préstamos y mora
+  // 2. Cobro de préstamos, mora y provisiones limitadas al saldo vivo
   for (let i = db.loans.length - 1; i >= 0; i--) {
     const l = db.loans[i];
     if (l.status === "Vigente") {
       if (Math.random() < l.defProb / 4) {
         l.status = "Mora";
-        const prov = l.bal * 0.30;
-        db.provisions += prov;
-        expProv += prov;
-        logEvent(`MORA: ${l.name} (${l.label}) atrasado por ${fmtL(l.bal)}.`, "neg");
+        const targetProv = Math.round(l.bal * 0.30);
+        const addProv = Math.max(0, targetProv - (l.provAllocated || 0));
+        l.provAllocated = (l.provAllocated || 0) + addProv;
+        db.provisions += addProv;
+        applyIncomeImpact(-addProv, "prov");
+        logEvent(`MORA: ${l.name} (${l.label}) atrasado por ${fmtL(l.bal)}. Provisión +${fmtL(addProv)}.`, "neg");
         continue;
       }
-      const qInt = l.bal * (l.rate / 100 / 4);
-      const qPrin = l.bal / l.qLeft;
-      incLoans += qInt;
+      const qInt = Math.round(l.bal * (l.rate / 100 / 4));
+      const qPrin = Math.min(l.bal, Math.round(l.bal / l.qLeft));
       db.cashHnl += (qInt + qPrin);
       l.bal -= qPrin;
       l.qLeft -= 1;
-      if (l.qLeft <= 0 || l.bal <= 5) db.loans.splice(i, 1);
+      applyIncomeImpact(qInt, "loans");
+
+      if (l.qLeft <= 0 || l.bal <= 5) {
+        db.loans.splice(i, 1);
+      }
     } else {
-      if (Math.random() < 0.25) {
-        const addProv = l.bal * 0.15;
+      const targetProv = Math.min(l.bal, Math.round(l.bal * 0.60));
+      const addProv = Math.max(0, targetProv - (l.provAllocated || 0));
+      if (addProv > 0) {
+        l.provAllocated += addProv;
         db.provisions += addProv;
-        expProv += addProv;
+        applyIncomeImpact(-addProv, "prov");
       }
     }
   }
 
-  // Comisiones operativas por clientes y remesas/servicios
-  const svcFee = db.clients * 45;
-  incFees += svcFee;
+  // 3. Comisiones por servicios y mantenimiento de cuentas
+  const svcFee = Math.round(db.clients * 45);
   db.cashHnl += svcFee;
+  applyIncomeImpact(svcFee, "fees");
 
-  // Intereses pagados por ahorro, cheques (baja tasa 0.5%) y CDPs
-  const cdpTotal = db.cdps.reduce((s, c) => s + c.amount, 0);
-  const intSav = db.savingsDep * (db.savRate / 100 / 4);
-  const intChk = db.checkingDep * (0.005 / 4);
-  const intCdp = db.cdps.reduce((s, c) => s + c.amount * (c.rate / 100 / 4), 0);
-  const intRed = db.rediscount * ((db.tpm + 2.5) / 100 / 4);
-  expDep = intSav + intChk + intCdp + intRed;
+  // 4. Intereses pagados por captación y redescuento
+  const intSav = Math.round(db.savingsDep * (db.savRate / 100 / 4));
+  const intChk = Math.round(db.checkingDep * (0.005 / 4));
+  const intCdp = Math.round(db.cdps.reduce((s, c) => s + c.amount * (c.rate / 100 / 4), 0));
+  const intRed = Math.round(db.rediscount * ((db.tpm + 2.5) / 100 / 4));
+  const totalInterestExp = intSav + intChk + intCdp + intRed;
 
-  // Vencimiento de CDPs
+  db.cashHnl -= totalInterestExp;
+  applyIncomeImpact(-totalInterestExp, "dep");
+
+  // 5. Vencimiento de CDP: devuelve el capital al cliente desde caja
   for (let i = db.cdps.length - 1; i >= 0; i--) {
     db.cdps[i].qLeft -= 1;
     if (db.cdps[i].qLeft <= 0) {
-      logEvent(`Venció ${db.cdps[i].name} por ${fmtL(db.cdps[i].amount)}.`);
+      const matAmt = db.cdps[i].amount;
+      const matName = db.cdps[i].name;
+      db.cashHnl -= matAmt;
       db.cdps.splice(i, 1);
+      logEvent(`Venció ${matName}: reembolsado capital de ${fmtL(matAmt)} a clientes.`, "warn");
     }
   }
 
-  // Gastos operativos de agencias y personal
-  expOpex = db.branches * 1850000 + db.loans.length * 35000;
-  db.cashHnl -= (expDep + expOpex);
+  // 6. Gastos operativos trimestrales
+  const opex = db.branches * 1850000 + db.loans.length * 35000;
+  db.cashHnl -= opex;
+  applyIncomeImpact(-opex, "opex");
 
-  // Flujo natural de depósitos según tasa de ahorro
+  // 7. Flujo natural de ahorros y reseteo de cupos comerciales del trimestre
   const depDeltaPct = ((db.savRate - 3.0) * 0.018) + ((db.reputation - 60) * 0.0008);
-  const dSav = db.savingsDep * depDeltaPct;
-  db.savingsDep = Math.max(10000000, db.savingsDep + dSav);
-  db.cashHnl += dSav;
+  const dSav = Math.round(db.savingsDep * depDeltaPct);
+  if (db.savingsDep + dSav >= 10000000) {
+    db.savingsDep += dSav;
+    db.cashHnl += dSav;
+  }
 
-  // Resultado neto
-  const net = (incLoans + incFees) - (expDep + expOpex + expProv);
-  db.retained += net;
-  db.pl = { incLoans, incFees, expDep, expOpex, expProv, net };
-  db.pl.incFees = 0;
+  db.depQuotaLeft = db.branches * 30000000;
+  db.lcQuotaLeft = db.branches;
 
-  // Encaje legal sobre captación total (mínimo 15%)
-  const totDep = db.savingsDep + db.checkingDep + cdpTotal;
+  // 8. Encaje legal y garantía de que provisiones no excedan cartera
+  clampProvisionsToLoans();
+  const cdpVal = db.cdps.reduce((s, c) => s + c.amount, 0);
+  const totDep = db.savingsDep + db.checkingDep + cdpVal;
   const encaje = totDep > 0 ? (db.cashHnl / totDep) * 100 : 100;
+
   if (encaje < 15.0) {
-    const fine = Math.max(500000, (totDep * 0.15 - db.cashHnl) * 0.06);
+    const fine = Math.round(Math.max(500000, (totDep * 0.15 - db.cashHnl) * 0.06));
     db.cashHnl -= fine;
-    db.retained -= fine;
+    applyIncomeImpact(-fine, "opex");
     db.reputation = Math.max(5, db.reputation - 6);
     logEvent(`MULTA ENCAJE (${encaje.toFixed(1)}% < 15%): ${fmtL(fine)}.`, "neg");
-  } else if (net > 0) {
+  } else if (db.pl.incLoans + db.pl.incFees - db.pl.expDep - db.pl.expOpex - db.pl.expProv + db.pl.fxPnl > 0) {
     db.reputation = Math.min(100, db.reputation + 1);
   }
+
+  db.pl.net = Math.round(db.pl.incLoans + db.pl.incFees - db.pl.expDep - db.pl.expOpex - db.pl.expProv + db.pl.fxPnl);
 
   // Avanzar trimestre
   db.q += 1;
@@ -1181,7 +1308,7 @@ function nextQuarter() {
   if (eq <= 0 || db.cashHnl < -10000000) {
     db.locked = true;
     logEvent("🚨 INTERVENCIÓN REGULATORIA: PATRIMONIO O LIQUIDEZ EN NIVEL CRÍTICO.", "neg");
-    alert("¡El banco ha sido intervenido por falta de capital o liquidez! Pulsa 'Reiniciar' para empezar de nuevo.");
+    alert("¡El banco ha sido intervenido por falta de capital o liquidez! Pulsa 'Nueva Partida' para reiniciar.");
   } else {
     refreshApps();
   }
@@ -1271,13 +1398,14 @@ function renderTables() {
 }
 
 function renderAll() {
+  clampProvisionsToLoans();
   syncControls();
   renderTables();
 
   const okLoans = db.loans.filter(l => l.status === "Vigente").reduce((s, l) => s + l.bal, 0);
   const badLoans = db.loans.filter(l => l.status === "Mora").reduce((s, l) => s + l.bal, 0);
   const evVal = db.eventualAssets.reduce((s, e) => s + e.bookVal, 0);
-  const usdHnl = db.usdBalance * db.fxRate;
+  const usdHnl = Math.round(db.usdBalance * db.fxRate);
   const totAssets = db.cashHnl + usdHnl + okLoans + badLoans + evVal - db.provisions + db.fixedAssets;
 
   const cdpVal = db.cdps.reduce((s, c) => s + c.amount, 0);
@@ -1316,6 +1444,8 @@ function renderAll() {
   else if (db.reputation < 75) grade = "A";
   document.getElementById("kpi-rating").textContent = `${grade} (${db.reputation}/100)`;
   document.getElementById("lbl-branches").textContent = `${db.branches} Agencias`;
+  document.getElementById("lbl-dep-quota").textContent = fmtL(db.depQuotaLeft);
+  document.getElementById("lbl-lc-quota").textContent = `${db.lcQuotaLeft} operaciones`;
 
   // Captación
   document.getElementById("dep-sav").textContent = fmtL(db.savingsDep);
@@ -1329,6 +1459,10 @@ function renderAll() {
   document.getElementById("pl-exp-dep").textContent = fmtL(-db.pl.expDep);
   document.getElementById("pl-exp-opex").textContent = fmtL(-db.pl.expOpex);
   document.getElementById("pl-exp-prov").textContent = fmtL(-db.pl.expProv);
+  const fxEl = document.getElementById("pl-fx-pnl");
+  fxEl.textContent = fmtL(db.pl.fxPnl);
+  fxEl.className = "num mono " + (db.pl.fxPnl >= 0 ? "pos" : "neg");
+
   const netEl = document.getElementById("pl-net");
   netEl.textContent = fmtL(db.pl.net);
   netEl.className = "num mono " + (db.pl.net >= 0 ? "pos" : "neg");
@@ -1358,6 +1492,7 @@ function renderAll() {
     : "SISTEMA ACTIVO — Supervisión Prudencial Normal";
 
   if (document.getElementById("t-graficos").classList.contains("active")) drawGraphs();
+  saveGame();
 }
 
 function drawGraphs() {
@@ -1435,16 +1570,36 @@ function plotSeries(canvasId, labels, series, unit, bg, fg, grid) {
 }
 
 function resetSim() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
   db = initialState();
+  document.getElementById("rng-act-rate").value = db.actRate;
+  document.getElementById("rng-sav-rate").value = db.savRate;
+  document.getElementById("rng-cd-rate").value = db.cdRate;
+  document.getElementById("rng-risk-cap").value = db.riskCap;
+  document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("TERMINAL BCH-98 PRO REINICIADA. CAPITAL INICIAL: L 150,000,000.", "pos");
+  logEvent("NUEVA PARTIDA BCH-98 PRO v3.1 INICIADA. CAJA INICIAL: L 284,300,000.", "pos");
   refreshApps();
   renderAll();
 }
 
-db = initialState();
-logEvent("TERMINAL BCH-98 PRO INICIADA — BANCA UNIVERSAL & MESA DE DIVISAS.", "pos");
-refreshApps();
+const restored = loadGame();
+if (restored) {
+  db = Object.assign(initialState(), restored);
+  document.getElementById("rng-act-rate").value = db.actRate;
+  document.getElementById("rng-sav-rate").value = db.savRate;
+  document.getElementById("rng-cd-rate").value = db.cdRate;
+  document.getElementById("rng-risk-cap").value = db.riskCap;
+  document.getElementById("sel-focus").value = db.focus;
+  logEvent(`Partida restaurada automáticamente (T${db.q}-${db.yr}).`, "pos");
+} else {
+  db = initialState();
+  logEvent("TERMINAL BCH-98 PRO v3.1 INICIADA — MOTOR CONTABLE CORREGIDO.", "pos");
+}
+
+if (!db.apps || db.apps.length === 0) {
+  refreshApps();
+}
 renderAll();
 </script>
 </body>
