@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BCH-98 PRO v5.0 — núcleo — Simulador Bancario Integral (Banca HN, Equifax & CNBS)</title>
+<title>BCH-98 PRO v5.0 — núcleo — Simulador Bancario Integral (Banca HN, buró simulado & CNBS)</title>
 <style>
   :root {
     --bg-desktop: #008080;
@@ -364,7 +364,7 @@
       <select id="sel-focus" onchange="changeFocus()">
         <option value="ALL">Banca Integral (Personas, PyME y Empresarial)</option>
         <option value="PERSONAS">Banca Personas (Ahorro, Tarjetas, Vehicular, Hipoteca)</option>
-        <option value="PYME">Banca PyME (Capital de Trabajo, Cheques, Leasing)</option>
+        <option value="PRIVADA">Banca Privada y Patrimonial</option><option value="PYME">Banca PyME (Capital de Trabajo, Cheques, Leasing)</option>
         <option value="EMPRESARIAL">Banca Empresarial / Corporativa (Cartas Créd., CDP)</option>
       </select>
     </div>
@@ -440,7 +440,7 @@
         <input type="range" id="rng-cd-rate" class="op-inp" min="2" max="16" step="0.25" value="7.5" style="width:100%; margin-bottom:7px;" oninput="syncControls()">
 
         <div class="control-row">
-          <span>Score Mínimo Equifax:</span>
+          <span>Score Mínimo buró simulado:</span>
           <strong class="mono" id="lbl-min-score">580 pts</strong>
         </div>
         <input type="range" id="rng-min-score" class="op-inp" min="450" max="750" step="10" value="580" style="width:100%; margin-bottom:7px;" oninput="syncControls()">
@@ -481,8 +481,8 @@
 
     <!-- PANEL DERECHO: PESTAÑAS -->
     <div>
-      <div id="v5-panel" class="win-group" style="max-height:320px;overflow:auto"></div><div class="tabs">
-        <div class="tab-btn active" onclick="openTab('t-credito', this)">💳 Crédito, Tarjetas &amp; Equifax (<span id="cnt-apps">0</span>)</div>
+      <div id="v5-panel" class="win-group" style="max-height:320px;overflow:auto"></div><details class="win-group"><summary>Registro contable por cuenta</summary><div id="account-ledger" style="max-height:250px;overflow:auto"></div></details><p>Juego educativo independiente. Entidades, scores, montos, tasas y umbrales son simulados; no son ofertas ni normas oficiales. Referencias de productos: <a href="https://www.ficohsa.hn/banca-personas/tarjetas-credito/disfruta-mas-visa-clasica">Ficohsa</a> · <a href="https://www.baccredomatic.com/es-hn/personas/tarjetas">BAC</a> · <a href="https://experienciapyme.banpais.hn/soluciones/tarjetas-comerciales">Banpaís</a> · <a href="https://www.cnbs.gob.hn/la-cnbs-responde/">CNBS</a>.</p><div class="tabs">
+        <div class="tab-btn active" onclick="openTab('t-credito', this)">💳 Crédito, Tarjetas &amp; buró simulado (<span id="cnt-apps">0</span>)</div>
         <div class="tab-btn" onclick="openTab('t-captacion', this)">🏦 Captación, Remesas &amp; CDP</div>
         <div class="tab-btn" onclick="openTab('t-fx', this)">💱 Divisas &amp; Mercado Interbancario</div>
         <div class="tab-btn" onclick="openTab('t-balance', this)">⚖️ Balance, Adjudicados &amp; Contabilidad</div>
@@ -502,7 +502,7 @@
                 <th>Solicitante / Ingreso</th>
                 <th>Banca</th>
                 <th>Producto / Nivel</th>
-                <th class="num">Equifax</th>
+                <th class="num">buró simulado</th>
                 <th class="num">Monto</th>
                 <th class="num">Tasa Net.</th>
                 <th class="num">Mora Est.</th>
@@ -728,6 +728,8 @@ const PRODUCTS = [
   { seg: "PERSONAS", label: "Tarjeta Black", cardTier: "Black", minInc: 140000, minAmt: 1800000, maxAmt: 5500000, minQ: 8, maxQ: 20, rateAdj: 3.5, baseDef: 0.03, collateral: "Banca Privada / Ingreso Alto" },
   { seg: "PERSONAS", label: "Préstamo Vehicular", cardTier: null, minInc: 30000, minAmt: 650000, maxAmt: 3800000, minQ: 8, maxQ: 20, rateAdj: 1.0, baseDef: 0.055, collateral: "Vehículo (Prenda)" },
   { seg: "PERSONAS", label: "Crédito Hipotecario", cardTier: null, minInc: 55000, minAmt: 2500000, maxAmt: 16000000, minQ: 12, maxQ: 28, rateAdj: -1.0, baseDef: 0.04, collateral: "Bien Inmueble" },
+  { seg: "PRIVADA", label: "Crédito con respaldo CDP", cardTier: null, minInc: 100000, minAmt: 1000000, maxAmt: 12000000, minQ: 4, maxQ: 12, rateAdj: -1, baseDef: 0.025, collateral: "Depósito pignorado simulado" },
+  { seg: "PRIVADA", label: "Tarjeta Visa Infinite", cardTier: "Black", minInc: 140000, minAmt: 180000, maxAmt: 800000, minQ: 8, maxQ: 20, rateAdj: 3, baseDef: 0.03, collateral: "Línea revolvente" },
   { seg: "PYME", label: "Capital de Trabajo PyME", cardTier: null, minInc: 90000, minAmt: 1200000, maxAmt: 8500000, minQ: 4, maxQ: 12, rateAdj: 1.5, baseDef: 0.085, collateral: "Inventarios / CxC" },
   { seg: "PYME", label: "Tarjeta Empresarial / PyME", cardTier: "Oro", minInc: 80000, minAmt: 500000, maxAmt: 3000000, minQ: 4, maxQ: 10, rateAdj: 6.0, baseDef: 0.075, collateral: "RTN / Flujo Comercial" },
   { seg: "EMPRESARIAL", label: "Financiamiento Corporativo", cardTier: "Black", minInc: 350000, minAmt: 12000000, maxAmt: 65000000, minQ: 8, maxQ: 24, rateAdj: -1.5, baseDef: 0.03, collateral: "Garantía Real / Flujo" }
@@ -758,7 +760,7 @@ function initialState() {
     cdRate: 7.5,
     minScore: 580,
     branches: 3,
-    refreshesLeft: 0, cards: [], contracts: [], periods: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
+    refreshesLeft: 0, cards: [], contracts: [], periods: [], ledger: [], remittanceQuota: 3, capitalQuota: 1, capitalAuthorized: 300000000, appHistory: [],
     paidCap: 120000000,
     retained: 30000000,
     cashHnl: 284300000,
@@ -808,6 +810,7 @@ function initialState() {
 }
 
 function saveGame() {
+  if (transactionActive) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
   } catch (e) {}
@@ -928,6 +931,7 @@ function openTab(id, el) {
 }
 
 function changeFocus() {
+  if(db.locked)return;
   db.focus = document.getElementById("sel-focus").value;
   if(db.locked) return;
   logEvent(`División seleccionada: ${document.getElementById("sel-focus").selectedOptions[0].text}`);
@@ -935,6 +939,7 @@ function changeFocus() {
 }
 
 function syncControls() {
+  if(db.locked)return;
   db.actRate = parseFloat(document.getElementById("rng-act-rate").value);
   db.savRate = parseFloat(document.getElementById("rng-sav-rate").value);
   db.cdRate = parseFloat(document.getElementById("rng-cd-rate").value);
@@ -962,7 +967,7 @@ function generateAppsList() {
 
   for (let i = 0; i < count; i++) {
     const prod = pool[Math.floor(Math.random() * pool.length)];
-    const score = 500 + Math.floor(Math.random() * 330); // Equifax 500 - 829
+    const score = 500 + Math.floor(Math.random() * 330); // buró simulado 500 - 829
     if (score < db.minScore) continue;
 
     const income = Math.round((prod.minInc * (0.9 + Math.random() * 1.4)) / 1000) * 1000;
@@ -1072,6 +1077,7 @@ function seizeOrRecover(id) {
   const idx = db.loans.findIndex(l => l.id === id);
   if (idx === -1) return;
   const l = db.loans[idx];
+  if(l.status!=="Mora")return;
 
   const releasedProv = Math.min(db.provisions, l.provAllocated || 0);
   db.provisions -= releasedProv;
@@ -1174,7 +1180,7 @@ function tradeFX(side, usdAmt) {
     }
 
     // Valor de referencia del ingreso en USD al tipo de cambio de referencia actual
-    const refBookValue = Math.round(usdAmt * db.fxRate);
+    const refBookValue = Math.round((db.usdBalance+usdAmt)*db.fxRate)-Math.round(db.usdBalance*db.fxRate);
     // Resultado real de la operación: diferencia vs referencia menos la comisión pagada
     const realFxResult = (refBookValue - acquisitionCost) - commPaid;
 
@@ -1195,7 +1201,7 @@ function tradeFX(side, usdAmt) {
     const grossHnl = Math.round(usdAmt * sellPrice);
     const commPaid = Math.round(grossHnl * commRate);
     const netCashIn = grossHnl - commPaid;
-    const refBookValue = Math.round(usdAmt * db.fxRate);
+    const refBookValue = Math.round(db.usdBalance*db.fxRate)-Math.round((db.usdBalance-usdAmt)*db.fxRate);
     const realFxResult = netCashIn - refBookValue;
 
     db.usdBalance -= usdAmt;
@@ -1348,7 +1354,7 @@ function nextQuarter() {
   const prevFx = db.fxRate;
   const nextFx = +(prevFx * (1 + (Math.random() * 0.022 - 0.008))).toFixed(2);
   const fxDelta = nextFx - prevFx;
-  const fxGainLoss = Math.round(db.usdBalance * fxDelta);
+  const fxGainLoss = Math.round(db.usdBalance * nextFx)-Math.round(db.usdBalance * prevFx);
   db.fxRate = nextFx;
   if (fxGainLoss !== 0) {
     postPL(fxGainLoss, "fx", `Revaluación FX (${prevFx.toFixed(2)} -> ${nextFx.toFixed(2)})`);
@@ -1726,6 +1732,7 @@ function renderAll() {
   renderTables();
   if (document.getElementById("t-graficos").classList.contains("active")) drawGraphs();
   renderV5();
+  renderAccountLedger();
   saveGame();
 }
 
@@ -1838,6 +1845,20 @@ function renderV5(){
   const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
   el.innerHTML="<h3>Operaciones y cierres — parámetros simulados</h3><p>Remesas pendientes: "+db.remittanceQuota+" | Suscripciones disponibles: "+db.capitalQuota+" | Resultado anual: "+fmtL(y)+"</p><p>Último trimestre cerrado: "+(last?"T"+last.q+"-"+last.yr+" · "+fmtL(last.net):"Sin cierres")+"</p><h4>Tarjetas revolventes</h4><table><thead><tr><th>Cliente</th><th>Categoría</th><th>Score</th><th>Límite</th><th>Utilizado</th><th>Disponible</th></tr></thead><tbody>"+db.cards.map(c=>"<tr><td>"+esc(c.client)+"</td><td>"+esc(c.label)+"</td><td>"+c.score+"</td><td>"+fmtL(c.limit)+"</td><td>"+fmtL(c.bal)+"</td><td>"+fmtL(c.limit-c.bal)+"</td></tr>").join("")+"</tbody></table><h4>Contratos interbancarios</h4>"+db.contracts.map(c=>"<p>"+esc(c.bank)+" · "+fmtL(c.amount)+" · vence en "+c.qLeft+"T</p>").join("")+"<h4>Historial de cierres</h4>"+db.periods.slice(-8).reverse().map(p=>"<p>T"+p.q+"-"+p.yr+": "+fmtL(p.net)+"</p>").join("");
 }
+
+
+let transactionActive=false;
+function balanceAccounts(){return {"1101 Caja HNL":db.cashHnl,"1102 Caja USD":Math.round(db.usdBalance*db.fxRate),"1201 Interbancario":db.interbankLoans,"1301 Cartera créditos":db.loans.reduce((s,l)=>s+l.bal,0),"1302 Tarjetas":db.cards.reduce((s,c)=>s+c.bal,0),"1401 Adjudicados":db.eventualAssets.reduce((s,e)=>s+e.bookVal,0),"1501 Activos fijos":db.fixedAssets,"1399 Provisiones":-db.provisions,"2101 Ahorro":-db.savingsDep,"2102 Cheques":-db.checkingDep,"2103 CDP":-db.cdps.reduce((s,c)=>s+c.amount,0),"2201 Redescuento":-db.rediscount,"3101 Capital":-db.paidCap,"3201 Resultados acumulados":-db.retained}}
+function wrapOperation(fn,name){return function(...args){
+ if(transactionActive)return fn(...args);if(db.locked)return;
+ if(getAuditImbalance().diff!==0){logEvent("Operación bloqueada: partida con descuadre previo.","neg");return;}
+ const prev=JSON.parse(JSON.stringify(db)),before=balanceAccounts();transactionActive=true;
+ try{fn(...args);const diff=getAuditImbalance().diff;if(diff!==0)throw Error("Diferencia "+fmtL(diff));const after=balanceAccounts();const lines=Object.keys(after).map(account=>({account,delta:after[account]-before[account]})).filter(l=>l.delta!==0).map(l=>({account:l.account,debit:Math.max(0,l.delta),credit:Math.max(0,-l.delta)}));if(lines.length)db.ledger.push({id:db.ledger.length+1,period:"T"+prev.q+"-"+prev.yr,concept:name,lines});}
+ catch(e){db=prev;logEvent("Operación revertida por auditoría: "+e.message,"neg");}
+ finally{transactionActive=false;renderAll();}
+}}
+approveApp=wrapOperation(approveApp,"Aprobación");rejectApp=wrapOperation(rejectApp,"Rechazo");approvePrimeClients=wrapOperation(approvePrimeClients,"Comité prime");seizeOrRecover=wrapOperation(seizeOrRecover,"Recuperación");sellEventual=wrapOperation(sellEventual,"Venta activo");attractDeposits=wrapOperation(attractDeposits,"Captación");processRemittances=wrapOperation(processRemittances,"Remesas");tradeFX=wrapOperation(tradeFX,"Divisas");lendInterbank=wrapOperation(lendInterbank,"Interbancario");mergeWeakCompetitor=wrapOperation(mergeWeakCompetitor,"Compra parcial cartera");issueNewShares=wrapOperation(issueNewShares,"Capital");requestRediscount=wrapOperation(requestRediscount,"Redescuento");repayRediscount=wrapOperation(repayRediscount,"Pago redescuento");openBranch=wrapOperation(openBranch,"Apertura agencia");closeBranch=wrapOperation(closeBranch,"Cierre agencia");nextQuarter=wrapOperation(nextQuarter,"Cierre trimestre");
+function renderAccountLedger(){const e=document.getElementById("account-ledger");if(!e)return;e.innerHTML="<h4>Movimientos por cuenta (resumen por operación)</h4><table><thead><tr><th>Asiento / período</th><th>Cuenta</th><th>Debe</th><th>Haber</th></tr></thead><tbody>"+(db.ledger||[]).slice(-12).reverse().flatMap(a=>a.lines.map(l=>"<tr><td>"+a.id+" · "+a.period+" · "+a.concept+"</td><td>"+l.account+"</td><td>"+fmtL(l.debit)+"</td><td>"+fmtL(l.credit)+"</td></tr>")).join("")+"</tbody></table>"}
 
 const saved = loadGame();
 if (saved) {
