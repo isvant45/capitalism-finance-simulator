@@ -448,6 +448,7 @@ function approveApp(id,disburse=false) {
     const limit=Math.min(a.amt,prod?.maxAmt??a.amt,Math.round(a.income*4));
     if(!cardEligible63(profile,prod,limit)){logEvent("Capacidad insuficiente para tarjeta.","warn");return;}
     if(limit<=0||limit<(prod?.minAmt??0)){logEvent("Capacidad insuficiente para el límite mínimo de esta categoría. Considera una tarjeta inferior.","warn");return;}
+    if(db.cards.some(c=>c.customerId===a.customerId&&c.label===a.label&&!c.status.startsWith("Cancelada")))throw Error("Ya existe tarjeta activa de esta categoría");
     db.cards.push(initCard63({managed:true,id:a.id,customerId:a.customerId,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,brand:prod?.brand||"",reward:prod?.reward||"",annualFee:prod?.fee||0,status:"Activa"}));
     tx360(a,"Emisión tarjeta",0);
     db.appHistory.push({...a,status:"Línea aprobada"});
