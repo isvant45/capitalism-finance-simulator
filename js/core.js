@@ -424,19 +424,19 @@ function refreshApps() {
 }
 
 function approveApp(id,disburse=false) {
-  if (db.locked) return;
+  if (db.locked&&!god65()) return;
   const idx = db.apps.findIndex(a => a.id === id);
   if (idx === -1) return;
   const a = db.apps[idx];
   ensureCustomers();const profile=customerFor(a);
-  if(profile){a.score=profile.score;a.income=profile.income;if(profile.seg!==a.seg){logEvent("Segmento modificado; crea una solicitud nueva.","warn");return;}}
+  if(profile){a.score=profile.score;a.income=profile.income;if(!god65()&&profile.seg!==a.seg){logEvent("Segmento modificado; crea una solicitud nueva.","warn");return;}}
   const prod=PRODUCTS.find(p=>p.label===a.label) || CARD_CATALOG.find(p=>p.cardTier===a.cardTier&&p.seg===a.seg);
   if(profile?.manual&&prod&&prod.cardTier)a.rate=Math.max(5.5,money((prod.apr??db.actRate+prod.rateAdj)+getScoreDiscount(profile.score)));
-  if (a.score<Math.max(db.minScore,prod?.minScore ?? tierFloor(a.cardTier)) || a.income<(prod?.minInc||0)) {logEvent("Solicitud no cumple ingreso mínimo o score simulado.","warn");return;}
+  if (!god65()&&(a.score<Math.max(db.minScore,prod?.minScore ?? tierFloor(a.cardTier)) || a.income<(prod?.minInc||0))) {logEvent("Solicitud no cumple ingreso mínimo o score simulado.","warn");return;}
   if(a.cardTier && a.label.includes("Tarjeta")){
-    const limit=Math.min(a.amt,prod?.maxAmt??a.amt,Math.round(a.income*4));
+    const limit=god65()?a.amt:Math.min(a.amt,prod?.maxAmt??a.amt,Math.round(a.income*4));
     if(!cardEligible63(profile,prod,limit)){logEvent("Capacidad insuficiente para tarjeta.","warn");return;}
-    if(limit<=0||limit<(prod?.minAmt??0)){logEvent("Capacidad insuficiente para el límite mínimo de esta categoría. Considera una tarjeta inferior.","warn");return;}
+    if(limit<=0||(!god65()&&limit<(prod?.minAmt??0))){logEvent("Capacidad insuficiente para el límite mínimo de esta categoría. Considera una tarjeta inferior.","warn");return;}
     if(db.cards.some(c=>c.customerId===a.customerId&&c.label===a.label&&!c.status.startsWith("Cancelada")))throw Error("Ya existe tarjeta activa de esta categoría");
     db.cards.push(initCard63({managed:true,id:a.id,customerId:a.customerId,client:a.client,label:a.label,seg:a.seg,score:a.score,income:a.income,limit,bal:0,rate:a.rate,brand:prod?.brand||"",reward:prod?.reward||"",annualFee:prod?.fee||0,status:"Activa"}));
     tx360(a,"Emisión tarjeta",0);
@@ -472,7 +472,7 @@ function approveApp(id,disburse=false) {
     provAllocated: 0
   });
 
-  if(a.collateralValue>0&&["Préstamo Vehicular","Crédito Hipotecario"].includes(a.label))registerCollateral(a.id,a.label==="Préstamo Vehicular"?"VEHICULO":"INMUEBLE",a.collateralValue);
+  if(a.collateralValue>0)registerCollateral(a.id,a.guaranteeType||(a.label==="Préstamo Vehicular"?"VEHICULO":a.label==="Crédito Hipotecario"?"INMUEBLE":"OTRO"),a.collateralValue);
   tx360(a,"Desembolso",a.amt);tx360(a,"Comisión desembolso",fee,fee);
  db.appHistory.push({...a,status:"Desembolsada"});
   db.apps.splice(idx, 1);
@@ -1090,7 +1090,7 @@ function renderAll() {
 
   // Bloqueo de controles operativos si el banco fue intervenido
   document.querySelectorAll(".op-btn").forEach(btn => {
-    btn.disabled = db.locked || (btn.id === "btn-refresh-apps" && db.refreshesLeft <= 0);
+    btn.disabled = (db.locked&&!god65()) || (btn.id === "btn-refresh-apps" && db.refreshesLeft <= 0);
   });
   document.querySelectorAll(".op-inp").forEach(inp => {
     inp.disabled = db.locked;
@@ -1103,9 +1103,9 @@ function renderAll() {
   ensureCustomers();renderCustomers();renderCardOperations();
   renderCalendar();
   renderTrialBalance();
-  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();renderBankDashboard();renderCustomer360();renderCredit62();renderAdvancedCards63();renderCRM63();renderDigital63();renderAudit64();
+  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();renderBankDashboard();renderCustomer360();renderCredit62();renderAdvancedCards63();renderCRM63();renderDigital63();renderAudit64();renderGod65();
   document.getElementById("bs-goodwill").textContent=fmtL(db.goodwill||0);document.getElementById("bs-bonds").textContent=fmtL(db.govBonds);document.getElementById("bs-ib-borrow").textContent=fmtL(db.interbankBorrowed);
-  document.querySelectorAll(".op-btn").forEach(b=>{if(db.locked)b.disabled=true;});
+  document.querySelectorAll(".op-btn").forEach(b=>{if(db.locked&&!god65())b.disabled=true;});
   saveGame();
 }
 
@@ -1194,7 +1194,7 @@ function resetSim() {
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("NUEVA PARTIDA Áureo Bank V6.4 INICIADA — BALANCE CUADRADO.", "pos");
+  logEvent("NUEVA PARTIDA Áureo Bank V6.5 INICIADA — BALANCE CUADRADO.", "pos");
   generateAppsList();
   renderAll();
 }
@@ -1225,7 +1225,7 @@ function renderV5(){
 let transactionActive=false;
 
 function wrapOperation(fn,name){return function(...args){
- if(transactionActive)return fn(...args);if(db.locked)return;
+ if(transactionActive)return fn(...args);if(db.locked&&!god65())return;
  if(getAuditImbalance().diff!==0){logEvent("Operación bloqueada: partida con descuadre previo.","neg");return;}
  const prev=JSON.parse(JSON.stringify(db)),before=balanceAccounts();transactionActive=true;
  try{fn(...args);normalizeMoney();validateAccounts63();const diff=getAuditImbalance().diff;if(!Number.isFinite(diff)||diff!==0)throw Error("Diferencia "+fmtL(diff));const after=balanceAccounts();const lines=Object.keys(after).map(account=>({account,delta:(toCents(after[account])-toCents(before[account]))/100})).filter(l=>l.delta!==0).map(l=>({account:l.account,debit:Math.max(0,l.delta),credit:Math.max(0,-l.delta)}));if(lines.reduce((s,l)=>s+toCents(l.debit)-toCents(l.credit),0)!==0)throw Error("Asiento no cuadra en centavos");if(lines.length)db.ledger.push({id:db.ledger.length+1,period:"T"+prev.q+"-"+prev.yr,concept:name,lines});}
@@ -1288,6 +1288,7 @@ create360=wrapOperation(create360,"Alta cliente");edit360=wrapOperation(edit360,
 createCredit62=wrapOperation(createCredit62,"Originación crediticia");signCredit62=wrapOperation(signCredit62,"Firma contrato");committee62=wrapOperation(committee62,"Comité de crédito");updateGuarantee62=wrapOperation(updateGuarantee62,"Avalúo declarado");payInstallment62=wrapOperation(payInstallment62,"Pago cuota");capitalPayment62=wrapOperation(capitalPayment62,"Abono capital");modifyLoan62=wrapOperation(modifyLoan62,"Modificación contractual");
 function disburse62(id){approveApp(id,true)}
 issueCard63=wrapOperation(issueCard63,"Emisión tarjeta");cardPurchase63=wrapOperation(cardPurchase63,"Consumo moneda / cuotas");changeCard63=wrapOperation(changeCard63,"Cambio contractual tarjeta");cancelCard63=wrapOperation(cancelCard63,"Cancelación tarjeta");addCard63=wrapOperation(addCard63,"Tarjeta adicional");crmAssign63=wrapOperation(crmAssign63,"Asignación CRM");crmLog63=wrapOperation(crmLog63,"Actividad CRM");crmGoal63=wrapOperation(crmGoal63,"Metas CRM");refreshOpportunities63=wrapOperation(refreshOpportunities63,"Evaluación oportunidades");decideOpp63=wrapOperation(decideOpp63,"Decisión oportunidad");deposit63=wrapOperation(deposit63,"Depósito individual");withdraw63=wrapOperation(withdraw63,"Retiro individual");transfer63=wrapOperation(transfer63,"Transferencia individual");payFromAccount63=wrapOperation(payFromAccount63,"Pago desde cuenta");requestIncrease63=wrapOperation(requestIncrease63,"Solicitud de aumento");
+editApplication65=wrapOperation(editApplication65,"Edición solicitud");approveConditions65=wrapOperation(approveConditions65,"Aprobación según condiciones");forceApprove65=wrapOperation(forceApprove65,"Aprobación libre modo Dios");editCollateral65=wrapOperation(editCollateral65,"Actualización de garantía");
 const saved = loadGame();
 if (saved) {
   db = saved;initAdvanced();
@@ -1301,7 +1302,7 @@ if (saved) {
   logEvent(`Partida restaurada (T${db.q}-${db.yr}).`, "pos");
 } else {
   db = initialState();
-  logEvent("Áureo Bank V6.4 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  logEvent("Áureo Bank V6.5 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
   if(saveBlocked64)logEvent("Partida anterior no válida: guardado automático suspendido. Consulta Configuración.","neg");
 }
 
