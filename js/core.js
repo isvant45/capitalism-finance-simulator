@@ -320,6 +320,7 @@ function logEvent(text, cls = "") {
   d.textContent = `[T${db.q}-${db.yr}] ${text}`;
   box.appendChild(d);
   box.scrollTop = box.scrollHeight;
+  recordBankActivity(text,cls);
 }
 
 
@@ -340,6 +341,7 @@ function openTab(id, el) {
   document.getElementById(id).classList.add("active");
   el.classList.add("active");
   if (id === "t-graficos") drawGraphs();
+  updateBankRoute(id);
 }
 
 function changeFocus() {
@@ -934,7 +936,7 @@ function renderTables() {
   tbRivals.innerHTML = "";
   tbRivals.innerHTML += `
     <tr style="font-weight:bold;">
-      <td>TU BANCO (BCH-98)</td>
+      <td>ÁUREO BANK</td>
       <td class="num mono">${fmtL(loansSum)}</td>
       <td class="num mono pos">${((loansSum / totalSys) * 100).toFixed(1)}%</td>
       <td class="pos">Activo</td>
@@ -1096,7 +1098,7 @@ function renderAll() {
   ensureCustomers();renderCustomers();renderCardOperations();
   renderCalendar();
   renderTrialBalance();
-  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();
+  renderTreasury();renderMarket();renderCompetitors();renderFinalUI();renderBankDashboard();
   document.getElementById("bs-goodwill").textContent=fmtL(db.goodwill||0);document.getElementById("bs-bonds").textContent=fmtL(db.govBonds);document.getElementById("bs-ib-borrow").textContent=fmtL(db.interbankBorrowed);
   document.querySelectorAll(".op-btn").forEach(b=>{if(db.locked)b.disabled=true;});
   saveGame();
@@ -1147,7 +1149,7 @@ function plotSeries(canvasId, labels, series, unit, bg, fg, grid) {
   const span = Math.max(1, maxV - minV);
 
   ctx.fillStyle = fg;
-  ctx.font = "11px Courier New";
+  ctx.font = "12px system-ui";
   for (let i = 0; i <= 4; i++) {
     const val = minV + (span * i / 4);
     const yPos = (h - 24) - ((val - minV) / span) * (h - 38);
@@ -1186,7 +1188,7 @@ function resetSim() {
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
   document.getElementById("ticker-log").innerHTML = "";
-  logEvent("NUEVA PARTIDA BCH-98 PRO v5.5 — modular INICIADA — BALANCE CUADRADO.", "pos");
+  logEvent("NUEVA PARTIDA Áureo Bank V6.0 INICIADA — BALANCE CUADRADO.", "pos");
   generateAppsList();
   renderAll();
 }
@@ -1260,7 +1262,7 @@ function chooseDivision(seg){
  const tab=document.querySelector(".tab-btn[onclick*='t-credito']");if(tab)openTab("t-credito",tab);
 }
 function selectModule(id){const tab=document.querySelector(".tab-btn[onclick*='"+id+"']");if(tab)openTab(id,tab);}
-function setTheme(theme){document.body.classList.remove("dark-mode","executive-mode");if(theme==="dark")document.body.classList.add("dark-mode");if(theme==="light")document.body.classList.add("executive-mode");try{localStorage.setItem("bch98_theme",theme)}catch(e){}if(document.getElementById("t-graficos").classList.contains("active"))drawGraphs();}
+function setTheme(theme){theme=theme==="dark"?"dark":"light";document.body.classList.remove("dark-mode","executive-mode");if(theme==="dark")document.body.classList.add("dark-mode");document.getElementById("btn-theme").textContent=theme==="dark"?"Modo claro":"Modo oscuro";try{localStorage.setItem("bch98_theme",theme)}catch(e){}if(document.getElementById("t-graficos").classList.contains("active"))drawGraphs();}
 function renderTrialBalance(){
  const el=document.getElementById("trial-balance");if(!el)return;
  const accounts=balanceAccounts();const rows=Object.entries(accounts).map(([name,saldo])=>{
@@ -1286,10 +1288,10 @@ if (saved) {
   document.getElementById("rng-cd-rate").value = db.cdRate;
   document.getElementById("rng-min-score").value = db.minScore;
   document.getElementById("sel-focus").value = db.focus;
-  logEvent(`Partida v4.0 restaurada (T${db.q}-${db.yr}).`, "pos");
+  logEvent(`Partida restaurada (T${db.q}-${db.yr}).`, "pos");
 } else {
   db = initialState();
-  logEvent("TERMINAL BCH-98 PRO v5.5 — modular INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
+  logEvent("Áureo Bank V6.0 INICIADA — MOTOR CONTABLE AUDITADO.", "pos");
 }
 
 if (!saved) {
