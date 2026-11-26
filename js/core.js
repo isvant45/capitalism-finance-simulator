@@ -346,7 +346,7 @@ function openTab(id, el) {
   document.getElementById(id).classList.add("active");
   el.classList.add("active");
   if (id === "t-graficos") drawGraphs();
-  updateBankRoute(id);if(["t-create-client","t-customer360","t-credit-origin","t-credit-committee","t-loan-detail"].includes(id)){if(autoClock){clearInterval(autoClock);autoClock=null;renderCalendar();}if(id==="t-customer360")renderCustomer360();if(id.startsWith("t-credit-")||id==="t-loan-detail")renderCredit62();}
+  updateBankRoute(id);if(["t-create-client","t-customer360","t-credit-origin","t-credit-committee","t-loan-detail"].includes(id)){if(autoClock){clearInterval(autoClock);autoClock=null;renderCalendar();}if(id==="t-customer360")renderCustomer360();if(id==="t-credit-origin"){quoteDraft62={customerId:db.selectedCustomerId};renderOrigin62(true);}if(id.startsWith("t-credit-")||id==="t-loan-detail")renderCredit62();}
 }
 
 function changeFocus() {
