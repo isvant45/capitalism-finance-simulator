@@ -8,10 +8,10 @@ function validateSave(p){
  for(const k of ["cashHnl","usdBalance","govBonds","interbankBorrowed","interbankLoans","fixedAssets","savingsDep","checkingDep","paidCap","retained","provisions","rediscount","goodwill"])if(!isMoney(p[k])||(!["cashHnl","retained"].includes(k)&&p[k]<0))throw Error("Saldo inválido "+k);
  for(const k of ["apps","loans","cards","cdps","contracts","eventualAssets"])for(const x of p[k])if(!x||typeof x!=="object"||typeof x.id!=="number")throw Error("Registro inválido "+k);
  for(const l of p.loans)if(!isMoney(l.bal)||l.bal<0||!Number.isFinite(l.rate)||!["Vigente","Mora"].includes(l.status)||typeof l.client!=="string"||typeof l.label!=="string")throw Error("Crédito inválido");
- for(const c of p.cards)if(!isMoney(c.bal)||c.bal<0||!Number.isSafeInteger(c.limit)||c.limit<=0||!Number.isFinite(c.rate)||typeof c.client!=="string")throw Error("Tarjeta inválida");
+ for(const c of p.cards)if(!isMoney(c.bal)||c.bal<0||!isMoney(c.limit)||c.limit<=0||!Number.isFinite(c.rate)||typeof c.client!=="string")throw Error("Tarjeta inválida");
  for(const a of p.apps)if(typeof a.client!=="string"||typeof a.label!=="string"||!Number.isFinite(a.rate)||!Number.isFinite(a.defProb)||!isMoney(a.amt)||a.amt<=0)throw Error("Solicitud inválida");
  if(!p.pl||!p.hist||!Object.keys(base.pl).every(k=>Number.isFinite(p.pl[k]))||!Object.keys(base.hist).every(k=>Array.isArray(p.hist[k])))throw Error("Historial inválido");
- const old=db;try{db=p;const audit=getAuditImbalance();if(audit.diff!==0||!Number.isFinite(audit.totAssets))throw Error("Balance no cuadra");}finally{db=old;}return true;
+ const old=db;try{db=p;validateAccounts63();const audit=getAuditImbalance();if(audit.diff!==0||!Number.isFinite(audit.totAssets))throw Error("Balance no cuadra");}finally{db=old;}return true;
 }
 function applyPortableSave(p){validateSave(p);const old=db;try{db=p;initTreasury();initRivals();initHR();initRegulation();ensureCustomers();renderAll();}catch(e){db=old;renderAll();throw e;}}
 function saveSlot(n){if(![1,2,3].includes(n))return;try{localStorage.setItem("bch98_slot_"+n,JSON.stringify(db));logEvent("Guardado en espacio "+n,"pos");}catch(e){logEvent("No se pudo guardar: "+e.message,"neg");}}
@@ -41,7 +41,7 @@ function initAdvanced(){db.goodwill??=0;db.mergers??=[];db.scenarios??=[];}
 function migrateCents(){const old=Math.round(db.usdBalance*db.fxRate),now=money(db.usdBalance*db.fxRate);if(!db.centsVersion&&old!==now&&toCents(getAuditImbalance().diff)===toCents(now-old)){postPL(money(now-old),"fx","Migración de valuación USD a centavos");}db.centsVersion=1;}
 function runEconomicScenario(type){const p=db.yr+"-"+db.q;if(!["FX_SHOCK","LIQUIDITY_RUN","CREDIT_CRUNCH"].includes(type)||db.scenarios.some(x=>x.period===p&&x.type===type))return;
  if(type==="FX_SHOCK"){const old=db.fxRate;db.fxRate=money(old*1.06);postPL(money(db.usdBalance*db.fxRate)-money(db.usdBalance*old),"fx","Choque cambiario +6%");db.actRate=Math.min(35,money(db.actRate+1.5));}
- if(type==="LIQUIDITY_RUN"){const v=money(Math.max(0,Math.min(db.savingsDep*.25,db.cashHnl,35000000)));db.savingsDep-=v;db.cashHnl-=v;}
+ if(type==="LIQUIDITY_RUN"){const v=money(Math.max(0,Math.min(db.savingsDep*.25,db.savingsDep-tagged63("SAVINGS"),db.cashHnl,35000000)));db.savingsDep-=v;db.cashHnl-=v;}
  if(type==="CREDIT_CRUNCH"){for(const l of db.loans){const add=money(Math.max(0,Math.min(l.bal*.15,l.bal-(l.provAllocated||0))));l.provAllocated=money((l.provAllocated||0)+add);db.provisions+=add;postPL(-add,"prov","Estrés crediticio individual");l.defProb=Math.min(.95,(l.defProb||.05)+.05);}}
  db.scenarios.push({period:p,type});inspectBank();}
 function runAdvancedTests(){const original=db,results=[];const ck=(name,ok)=>results.push({name,ok:!!ok});testMode=true;try{db=initialState();initAdvanced();initTreasury();initRivals();initHR();initRegulation();generateAppsList();const start=db.cashHnl;attractDeposits("SAVINGS",10.33);ck("21 Depósito L 10.33",toCents(db.cashHnl-start)===1033&&getAuditImbalance().diff===0);const c=db.cashHnl;wrapOperation(()=>{db.cashHnl+=.01},"Error centavo")();ck("22 Rechazo de L 0.01",db.cashHnl===c);
